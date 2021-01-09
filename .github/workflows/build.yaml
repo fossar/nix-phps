@@ -1,0 +1,49 @@
+# This file builds given version of PHP and pushes it to Cachix cache.
+# The following secrets need to be set:
+# - “CACHIX_AUTH_TOKEN” for uploading built Nix packages to Cachix
+name: Build
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  build:
+    name: 'PHP ${{ matrix.php.major }}.${{ matrix.php.minor }}'
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        php:
+          - major: 8
+            minor: 0
+          - major: 7
+            minor: 4
+          - major: 7
+            minor: 3
+          - major: 7
+            minor: 2
+          - major: 7
+            minor: 1
+          - major: 7
+            minor: 0
+          - major: 5
+            minor: 6
+      # We want to fix failures individually.
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v12
+
+      - name: Set up Nix cache
+        uses: cachix/cachix-action@v8
+        with:
+          name: fossar
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Build PHP
+        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}
+
+      - name: Build Imagick extension
+        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.imagick
