@@ -45,6 +45,15 @@ let
           else
             super.extensions.mysqlnd;
 
+        oci8 =
+          if prev.lib.versionOlder super.php.version "7.0" then
+            super.extensions.oci8.override ({
+              version = "2.0.12";
+              sha256 = "1khqa7fs8dbyjclx05a5ls1f8paw1ij21qwlx3v7p8i3iqhnymkj";
+            })
+          else
+            super.extensions.oci8;
+
         opcache = super.extensions.opcache.overrideAttrs (attrs: {
           # The patch do not apply to PHP 5’s opcache.
           patches = if prev.lib.versionOlder super.php.version "7.0" then [] else attrs.patches or [];
