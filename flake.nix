@@ -19,6 +19,9 @@
       let
         # Let’s merge the package set from Nixpkgs with our custom PHP versions.
         pkgs = import nixpkgs.outPath {
+          config = {
+            allowUnfree = true;
+          };
           inherit system;
           overlays = [
             self.overlay
