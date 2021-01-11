@@ -10,6 +10,19 @@ let
 
     packageOverrides = self: super: {
       extensions = super.extensions // {
+        apcu =
+          if prev.lib.versionOlder super.php.version "7.0" then
+            super.extensions.apcu.overrideAttrs (attrs: {
+              name = "apcu-4.0.11";
+              version = "4.0.11";
+              src = builtins.fetchurl {
+                url = "http://pecl.php.net/get/apcu-4.0.11.tgz";
+                sha256 = "002d1gklkf0z170wkbhmm2z1p9p5ghhq3q1r9k54fq1sq4p30ks5";
+              };
+            })
+          else
+            super.extensions.apcu;
+
         dom = super.extensions.dom.overrideAttrs (attrs: {
           patches = attrs.patches or [] ++ prev.lib.optionals (prev.lib.versionOlder super.php.version "7.2") [
             # Fix tests with libxml2 2.9.10.
