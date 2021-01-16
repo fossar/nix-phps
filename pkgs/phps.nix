@@ -47,6 +47,19 @@ let
           ];
         });
 
+        memcached =
+          if prev.lib.versionOlder super.php.version "7.0" then
+            super.extensions.memcached.overrideAttrs (attrs: {
+              name = "memcached-2.2.0";
+              version = "2.2.0";
+              src = builtins.fetchurl {
+                url = "http://pecl.php.net/get/memcached-2.2.0.tgz";
+                sha256 = "0n4z2mp4rvrbmxq079zdsrhjxjkmhz6mzi7mlcipz02cdl7n1f8p";
+              };
+            })
+          else
+            super.extensions.memcached;
+
         mysqlnd =
           if prev.lib.versionOlder super.php.version "7.1" then
             super.extensions.mysqlnd.overrideAttrs (attrs: {
