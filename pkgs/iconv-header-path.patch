@@ -1,0 +1,11 @@
+--- a/ext/iconv/config.m4
++++ b/ext/iconv/config.m4
+@@ -34,7 +34,7 @@ if test "$PHP_ICONV" != "no"; then
+     if test -r "$PHP_ICONV_PREFIX/include/giconv.h"; then
+       PHP_ICONV_H_PATH="$PHP_ICONV_PREFIX/include/giconv.h"
+     else
+-      PHP_ICONV_H_PATH="$PHP_ICONV_PREFIX/include/iconv.h"
++      PHP_ICONV_H_PATH="iconv.h"
+ 	fi
+ 
+     AC_MSG_CHECKING([if iconv is glibc's])

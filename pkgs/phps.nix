@@ -47,6 +47,13 @@ let
           ];
         });
 
+        iconv = super.extensions.iconv.overrideAttrs (attrs: {
+          patches = attrs.patches or [] ++ prev.lib.optionals (prev.lib.versionOlder super.php.version "8.0") [
+            # Header path defaults to FHS location, preventing the configure script from detecting errno support.
+            ./iconv-header-path.patch
+          ];
+        });
+
         memcached =
           if prev.lib.versionOlder super.php.version "7.0" then
             super.extensions.memcached.overrideAttrs (attrs: {
