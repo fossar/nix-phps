@@ -9,6 +9,10 @@ let
     inherit (prev) callPackage lib stdenv nixosTests;
 
     packageOverrides = self: super: {
+      tools = super.tools // {
+        php-cs-fixer-2 = self.callPackage ./php-cs-fixer/2.x.nix { };
+      };
+
       extensions = super.extensions // {
         apcu =
           if prev.lib.versionOlder super.php.version "7.0" then
