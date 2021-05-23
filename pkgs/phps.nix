@@ -181,4 +181,16 @@ in {
     posix readline session simplexml sockets soap sodium sqlite3
     tokenizer xmlreader xmlwriter zip zlib
   ] ++ prev.lib.optionals (!prev.stdenv.isDarwin) [ imap ]));
+
+  php73 = prev.php73.override {
+    inherit (_args) packageOverrides;
+  };
+
+  php74 = prev.php74.override {
+    inherit (_args) packageOverrides;
+  };
+
+  php80 = prev.php80.override {
+    inherit (_args) packageOverrides;
+  };
 }
