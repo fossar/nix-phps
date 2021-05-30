@@ -5,6 +5,8 @@ nixpkgs:
 final: prev:
 
 let
+  patchName = patch: patch.name or (builtins.baseNameOf patch);
+
   _args = {
     inherit (prev) callPackage lib stdenv nixosTests;
 
@@ -60,24 +62,40 @@ let
 
         intl = super.extensions.intl.overrideAttrs (attrs: {
           doCheck = if prev.lib.versionOlder super.php.version "7.2" then false else attrs.doCheck or true;
-          patches = attrs.patches or [] ++ prev.lib.optionals (prev.lib.versionOlder super.php.version "7.1") [
-            # Fix build with newer ICU.
-            (prev.fetchpatch {
-              url = "https://github.com/php/php-src/commit/8d35a423838eb462cd39ee535c5d003073cc5f22.patch";
-              sha256 = if prev.lib.versionOlder super.php.version "7.0" then "8v0k6zaE5w4yCopCVa470TMozAXyK4fQelr+KuVnAv4=" else "NO3EY5z1LFWKor9c/9rJo1rpigG5x8W3Uj5+xAOwm+g=";
-              postFetch = ''
-                patch "$out" < ${if prev.lib.versionOlder super.php.version "7.0" then ./intl-icu-patch-5.6-compat.patch else ./intl-icu-patch-7.0-compat.patch}
-              '';
-            })
-          ];
+          patches =
+            let
+              upstreamPatches =
+                attrs.patches or [];
+
+              ourPatches =
+                prev.lib.optionals (prev.lib.versionOlder super.php.version "7.1") [
+                  # Fix build with newer ICU.
+                  (prev.fetchpatch {
+                    url = "https://github.com/php/php-src/commit/8d35a423838eb462cd39ee535c5d003073cc5f22.patch";
+                    sha256 = if prev.lib.versionOlder super.php.version "7.0" then "8v0k6zaE5w4yCopCVa470TMozAXyK4fQelr+KuVnAv4=" else "NO3EY5z1LFWKor9c/9rJo1rpigG5x8W3Uj5+xAOwm+g=";
+                    postFetch = ''
+                      patch "$out" < ${if prev.lib.versionOlder super.php.version "7.0" then ./intl-icu-patch-5.6-compat.patch else ./intl-icu-patch-7.0-compat.patch}
+                    '';
+                  })
+                ];
+            in
+            ourPatches ++ upstreamPatches;
         });
 
         iconv = super.extensions.iconv.overrideAttrs (attrs: {
-          patches = attrs.patches or [] ++ prev.lib.optionals (prev.lib.versionOlder super.php.version "8.0") [
-            # Header path defaults to FHS location, preventing the configure script from detecting errno support.
-            # TODO: re-add when PHP 7 is removed from Nixpkgs.
-            # ./iconv-header-path.patch
-          ];
+          patches =
+            let
+              upstreamPatches =
+                attrs.patches or [];
+
+              ourPatches =
+                prev.lib.optionals (prev.lib.versionOlder super.php.version "8.0") [
+                  # Header path defaults to FHS location, preventing the configure script from detecting errno support.
+                  # TODO: re-add when PHP 7 is removed from Nixpkgs.
+                  # ./iconv-header-path.patch
+                ];
+            in
+            ourPatches ++ upstreamPatches;
         });
 
         memcached =
@@ -114,8 +132,13 @@ let
             super.extensions.oci8;
 
         opcache = super.extensions.opcache.overrideAttrs (attrs: {
-          # The patch do not apply to PHP 5’s opcache.
-          patches = if prev.lib.versionOlder super.php.version "7.0" then [] else attrs.patches or [];
+          patches =
+            builtins.filter
+              (patch:
+                # The patch do not apply to PHP 5’s opcache.
+                patchName patch == "zend_file_cache_config.patch" -> prev.lib.versionAtLeast super.php.version "7.0"
+              )
+              (attrs.patches or []);
         });
 
         openssl =
@@ -137,18 +160,31 @@ let
             super.extensions.openssl;
 
         readline = super.extensions.readline.overrideAttrs (attrs: {
-          patches = attrs.patches or [] ++ prev.lib.optionals (prev.lib.versionOlder super.php.version "7.2") [
-            # Fix readline build
-            (prev.fetchpatch {
-              url = "https://github.com/php/php-src/commit/1ea58b6e78355437b79fb7b1f287ba6688fb1c57.patch";
-              sha256 = "Lh2h07lKkAXpyBGqgLDNXeiOocksARTYIysLWMon694=";
-            })
-          ];
+          patches =
+            let
+              upstreamPatches =
+                attrs.patches or [];
+
+              ourPatches =
+                prev.lib.optionals (prev.lib.versionOlder super.php.version "7.2") [
+                  # Fix readline build
+                  (prev.fetchpatch {
+                    url = "https://github.com/php/php-src/commit/1ea58b6e78355437b79fb7b1f287ba6688fb1c57.patch";
+                    sha256 = "Lh2h07lKkAXpyBGqgLDNXeiOocksARTYIysLWMon694=";
+                  })
+                ];
+            in
+            ourPatches ++ upstreamPatches;
         });
 
         zlib = super.extensions.zlib.overrideAttrs (attrs: {
-          # The patch does not apply to PHP 7’s zlib.
-          patches = if prev.lib.versionOlder super.php.version "7.1" then [] else attrs.patches or [];
+          patches =
+            builtins.filter
+              (patch:
+                # The patch does not apply to PHP 7’s zlib.
+                patchName patch == "zlib-darwin-tests.patch" -> prev.lib.versionAtLeast super.php.version "7.1"
+              )
+              (attrs.patches or []);
         });
       };
     };
