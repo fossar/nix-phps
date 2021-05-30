@@ -28,13 +28,34 @@ let
             super.extensions.apcu;
 
         dom = super.extensions.dom.overrideAttrs (attrs: {
-          patches = attrs.patches or [] ++ prev.lib.optionals (prev.lib.versionOlder super.php.version "7.2") [
-            # Fix tests with libxml2 2.9.10.
-            (prev.fetchpatch {
-              url = "https://github.com/php/php-src/commit/e29922f054639a934f3077190729007896ae244c.patch";
-              sha256 = "zC2QE6snAhhA7ItXgrc80WlDVczTlZEzgZsD7AS+gtw=";
-            })
-          ];
+          patches =
+            let
+              upstreamPatches =
+                attrs.patches or [];
+
+              ourPatches = prev.lib.optionals (prev.lib.versionOlder super.php.version "7.2") [
+                # Fix tests with libxml2 2.9.10.
+                (prev.fetchpatch {
+                  url = "https://github.com/php/php-src/commit/e29922f054639a934f3077190729007896ae244c.patch";
+                  sha256 = "zC2QE6snAhhA7ItXgrc80WlDVczTlZEzgZsD7AS+gtw=";
+                })
+              ];
+            in
+            ourPatches ++ upstreamPatches;
+
+          preCheck =
+            prev.lib.pipe
+              attrs.preCheck
+              [
+                (preCheck:
+                  if prev.lib.versionOlder super.php.version "7.3" then
+                    # Test not available on older versions.
+                    # Introduced in https://github.com/NixOS/nixpkgs/pull/124193
+                    builtins.replaceStrings [ "rm tests/bug80268.phpt" ] [ "" ] preCheck
+                  else
+                    preCheck
+                )
+              ];
         });
 
         intl = super.extensions.intl.overrideAttrs (attrs: {
@@ -54,7 +75,8 @@ let
         iconv = super.extensions.iconv.overrideAttrs (attrs: {
           patches = attrs.patches or [] ++ prev.lib.optionals (prev.lib.versionOlder super.php.version "8.0") [
             # Header path defaults to FHS location, preventing the configure script from detecting errno support.
-            ./iconv-header-path.patch
+            # TODO: re-add when PHP 7 is removed from Nixpkgs.
+            # ./iconv-header-path.patch
           ];
         });
 
