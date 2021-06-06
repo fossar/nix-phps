@@ -7,30 +7,30 @@ final: prev:
 let
   packageOverrides = import ./package-overrides.nix prev;
 
-  _args = {
-    inherit (prev) callPackage lib stdenv nixosTests;
+  _mkArgs =
+    args:
+    {
+      inherit packageOverrides;
+    } // args;
 
-    inherit packageOverrides;
-  };
+  generic = prev.callPackage "${nixpkgs}/pkgs/development/interpreters/php/generic.nix" { };
 
-  generic = (import "${nixpkgs}/pkgs/development/interpreters/php/generic.nix") _args;
-
-  base56 = prev.callPackage generic (_args // {
+  base56 = prev.callPackage generic (_mkArgs {
     version = "5.6.40";
     sha256 = "/9Al00YjVTqy9/2Psh0Mnm+fow3FZcoDode3YwI/ugA=";
   });
 
-  base70 = prev.callPackage generic (_args // {
+  base70 = prev.callPackage generic (_mkArgs {
     version = "7.0.33";
     sha256 = "STPqdCmKG6BGsCRv43cUFchN+4eDliAbVstTM6vobwc=";
   });
 
-  base71 = prev.callPackage generic (_args // {
+  base71 = prev.callPackage generic (_mkArgs {
     version = "7.1.33";
     sha256 = "laXl8uK3mzdrc3qC2WgskYkeYCifokGDRjoqyhWPT0s=";
   });
 
-  base72 = prev.callPackage generic (_args // {
+  base72 = prev.callPackage generic (_mkArgs {
     version = "7.2.34";
     sha256 = "DlgW1miiuxSspozvjEMEML2Gw8UjP2xCfRpUqsEnq88=";
   });
