@@ -112,6 +112,25 @@ in
       else
         prev.extensions.memcached;
 
+    mysql =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.mkExtension {
+          name = "mysql";
+          internalDeps = [ prev.php.extensions.mysqlnd ];
+          configureFlags = [
+            "--with-mysql"
+            "--with-mysql-sock=/run/mysqld/mysqld.sock"
+          ];
+          # Fix mysql not being able to find headers.
+          postPatch = ''
+            popd
+
+            ln -s $PWD/../../ext/ $PWD
+          '';
+        }
+      else
+        null;
+
     mysqlnd =
       if lib.versionOlder prev.php.version "7.1" then
         prev.extensions.mysqlnd.overrideAttrs (attrs: {
