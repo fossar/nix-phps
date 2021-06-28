@@ -54,3 +54,7 @@ jobs:
       - name: Build Redis 3 extension
         if: ${{ matrix.php.major < 8 }}
         run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis3
+
+      - name: Build MySQL extension
+        if: ${{ matrix.php.major < 7 }}
+        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.mysql
