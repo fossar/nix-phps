@@ -26,6 +26,46 @@ The following versions are currently supported:
 
 There is also a `php` package which is the alias of the default PHP version in Nixpkgs.
 
+### With niv
+
+Assuming you have [niv](https://github.com/nmattia/niv) installed and initialized in your project, run `niv add fossar/nix-phps`.
+
+Then, you will be able to use the PHP package, e.g. in `shell.nix`:
+
+```nix
+{
+  sources ? import ./nix/sources.nix
+}:
+
+let
+  nivOverlay =
+    final:
+    prev:
+    {
+      niv = (import sources.niv {}).niv;
+    };
+
+  pkgs = import sources.nixpkgs {
+    overlays = [
+      nivOverlay
+    ];
+    config = {
+    };
+  };
+
+  phps = import sources.nix-phps;
+in
+
+pkgs.mkShell {
+  buildInputs = [
+    phps.packages.${builtins.currentSystem}.php
+
+    # for easy updating
+    pkgs.niv
+  ];
+}
+```
+
 ### With Nix flakes
 
 > **Warning:** Nix flakes are experimental technology, use it only if you are willing to accept that you might need to change your code in the future.
