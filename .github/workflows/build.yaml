@@ -47,3 +47,6 @@ jobs:
 
       - name: Build Imagick extension
         run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.imagick
+
+      - name: Build Redis extension
+        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis

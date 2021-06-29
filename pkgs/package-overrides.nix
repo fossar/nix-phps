@@ -181,11 +181,11 @@ in
     redis =
       if lib.versionOlder prev.php.version "7.0" then
         prev.extensions.redis.overrideAttrs (attrs: {
-          name = "redis-3.1.4";
-          version = "3.1.4";
-          src = builtins.fetchurl {
-            url = "http://pecl.php.net/get/redis-3.1.4.tgz";
-            sha256 = "0rgjdrqfif8pfn3ipk1v4gyjkkdcdrdk479qbpda89w25vaxzsxd";
+          name = "redis-4.3.0";
+          version = "4.3.0";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/redis-4.3.0.tgz";
+            sha256 = "wPBM7DSZYKhCtgkg+4pDNlbi5JTq7W5mM5fWcQKlG6I=";
           };
         })
       else
