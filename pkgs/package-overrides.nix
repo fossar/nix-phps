@@ -191,6 +191,19 @@ in
       else
         prev.extensions.redis;
 
+    redis3 =
+      if lib.versionOlder prev.php.version "8.0" then
+        prev.extensions.redis.overrideAttrs (attrs: {
+          name = "redis-3.1.6";
+          version = "3.1.6";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/redis-3.1.6.tgz";
+            sha256 = "siknTNwUwi78Qf76ANtNxbsyqZfWgRJ4ZioEOnaqJgA=";
+          };
+        })
+      else
+        throw "php.extensions.redis3 requires PHP version < 8.0.";
+
     zlib = prev.extensions.zlib.overrideAttrs (attrs: {
       patches =
         builtins.filter
