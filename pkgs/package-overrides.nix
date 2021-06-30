@@ -131,6 +131,15 @@ in
       else
         null;
 
+    mysqli =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.extensions.mysqli.overrideAttrs (attrs: {
+          # the --with-mysql-sock option didn't exist in php 5.6
+          NIX_CFLAGS_COMPILE = "-DPHP_MYSQL_UNIX_SOCK_ADDR=\"/run/mysqld/mysqld.sock\"";
+        })
+      else
+        prev.extensions.mysqli;
+
     mysqlnd =
       if lib.versionOlder prev.php.version "7.1" then
         prev.extensions.mysqlnd.overrideAttrs (attrs: {
