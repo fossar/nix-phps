@@ -188,6 +188,15 @@ in
       else
         prev.extensions.openssl;
 
+    pdo_mysql =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.extensions.pdo_mysql.overrideAttrs (attrs: {
+          # PHP_MYSQL_SOCK didn't exist in php 5.6
+          NIX_CFLAGS_COMPILE = "-DPDO_MYSQL_UNIX_ADDR=\"/run/mysqld/mysqld.sock\"";
+        })
+      else
+        prev.extensions.pdo_mysql;
+
     readline = prev.extensions.readline.overrideAttrs (attrs: {
       patches =
         let
