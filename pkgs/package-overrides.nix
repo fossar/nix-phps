@@ -112,6 +112,17 @@ in
       else
         prev.extensions.memcached;
 
+    mssql =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.mkExtension {
+          name = "mssql";
+          configureFlags = [
+            "--with-mssql=${pkgs.freetds}"
+          ];
+        }
+      else
+        null;
+
     mysql =
       if lib.versionOlder prev.php.version "7.0" then
         prev.mkExtension {
