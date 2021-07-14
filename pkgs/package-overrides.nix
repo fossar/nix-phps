@@ -22,7 +22,7 @@ in
         prev.extensions.apcu.overrideAttrs (attrs: {
           name = "apcu-4.0.11";
           version = "4.0.11";
-          src = builtins.fetchurl {
+          src = pkgs.fetchurl {
             url = "http://pecl.php.net/get/apcu-4.0.11.tgz";
             sha256 = "002d1gklkf0z170wkbhmm2z1p9p5ghhq3q1r9k54fq1sq4p30ks5";
           };
@@ -104,7 +104,7 @@ in
         prev.extensions.memcached.overrideAttrs (attrs: {
           name = "memcached-2.2.0";
           version = "2.2.0";
-          src = builtins.fetchurl {
+          src = pkgs.fetchurl {
             url = "http://pecl.php.net/get/memcached-2.2.0.tgz";
             sha256 = "0n4z2mp4rvrbmxq079zdsrhjxjkmhz6mzi7mlcipz02cdl7n1f8p";
           };
