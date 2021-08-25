@@ -42,23 +42,25 @@ in
               url = "https://github.com/php/php-src/commit/e29922f054639a934f3077190729007896ae244c.patch";
               sha256 = "zC2QE6snAhhA7ItXgrc80WlDVczTlZEzgZsD7AS+gtw=";
             })
+          ] ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
+            (pkgs.fetchpatch {
+              url = "https://github.com/php/php-src/commit/4cc261aa6afca2190b1b74de39c3caa462ec6f0b.patch";
+              sha256 = "11qsdiwj1zmpfc2pgh6nr0sn7qa1nyjg4jwf69cgwnd57qfjcy4k";
+              excludes = [
+                "ext/dom/tests/bug43364.phpt"
+                "ext/dom/tests/bug80268.phpt"
+              ];
+            })
           ];
         in
         ourPatches ++ upstreamPatches;
 
-      preCheck =
-        lib.pipe
-          attrs.preCheck
-          [
-            (preCheck:
-              if lib.versionOlder prev.php.version "7.3" then
-                # Test not available on older versions.
-                # Introduced in https://github.com/NixOS/nixpkgs/pull/124193
-                builtins.replaceStrings [ "rm tests/bug80268.phpt" ] [ "" ] preCheck
-              else
-                preCheck
-            )
-          ];
+      preCheck = attrs.preCheck or "" +
+        lib.optionalString (lib.versionOlder prev.php.version "7.4" && lib.versionAtLeast prev.php.version "7.3") ''
+          rm tests/bug80268.phpt
+        '' + lib.optionalString (lib.versionOlder prev.php.version "7.4") ''
+          rm tests/bug43364.phpt
+        '';
     });
 
     intl = prev.extensions.intl.overrideAttrs (attrs: {
