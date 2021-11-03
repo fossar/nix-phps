@@ -15,6 +15,15 @@ let
       # For passing pcre2 to generic.nix.
       pcre2 = if (prev.lib.versionAtLeast args.version "7.3") then prev.pcre2 else prev.pcre;
 
+      phpAttrsOverrides = attrs: {
+        configureFlags =
+          attrs.configureFlags
+          ++ prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") [
+            # phar extension’s build system expects hash or it will degrade.
+            "--enable-hash"
+          ];
+      };
+
       # For passing pcre2 to php-packages.nix.
       callPackage =
         cpFn: cpArgs:
@@ -67,7 +76,7 @@ let
 in {
   php56 = base56.withExtensions ({ all, ... }: with all; ([
     bcmath calendar curl ctype dom exif fileinfo filter ftp gd
-    gettext gmp hash iconv intl json ldap mbstring mysqli mysqlnd opcache
+    gettext gmp iconv intl json ldap mbstring mysqli mysqlnd opcache
     openssl pcntl pdo pdo_mysql pdo_odbc pdo_pgsql pdo_sqlite pgsql
     posix readline session simplexml sockets soap sqlite3
     tokenizer xmlreader xmlwriter zip zlib
@@ -75,7 +84,7 @@ in {
 
   php70 = base70.withExtensions ({ all, ... }: with all; ([
     bcmath calendar curl ctype dom exif fileinfo filter ftp gd
-    gettext gmp hash iconv intl json ldap mbstring mysqli mysqlnd opcache
+    gettext gmp iconv intl json ldap mbstring mysqli mysqlnd opcache
     openssl pcntl pdo pdo_mysql pdo_odbc pdo_pgsql pdo_sqlite pgsql
     posix readline session simplexml sockets soap sqlite3
     tokenizer xmlreader xmlwriter zip zlib
@@ -83,7 +92,7 @@ in {
 
   php71 = base71.withExtensions ({ all, ... }: with all; ([
     bcmath calendar curl ctype dom exif fileinfo filter ftp gd
-    gettext gmp hash iconv intl json ldap mbstring mysqli mysqlnd opcache
+    gettext gmp iconv intl json ldap mbstring mysqli mysqlnd opcache
     openssl pcntl pdo pdo_mysql pdo_odbc pdo_pgsql pdo_sqlite pgsql
     posix readline session simplexml sockets soap sqlite3
     tokenizer xmlreader xmlwriter zip zlib
@@ -91,7 +100,7 @@ in {
 
   php72 = base72.withExtensions ({ all, ... }: with all; ([
     bcmath calendar curl ctype dom exif fileinfo filter ftp gd
-    gettext gmp hash iconv intl json ldap mbstring mysqli mysqlnd opcache
+    gettext gmp iconv intl json ldap mbstring mysqli mysqlnd opcache
     openssl pcntl pdo pdo_mysql pdo_odbc pdo_pgsql pdo_sqlite pgsql
     posix readline session simplexml sockets soap sodium sqlite3
     tokenizer xmlreader xmlwriter zip zlib
@@ -99,7 +108,7 @@ in {
 
   php73 = base73.withExtensions ({ all, ... }: with all; ([
     bcmath calendar curl ctype dom exif fileinfo filter ftp gd
-    gettext gmp hash iconv intl json ldap mbstring mysqli mysqlnd
+    gettext gmp iconv intl json ldap mbstring mysqli mysqlnd
     opcache openssl pcntl pdo pdo_mysql pdo_odbc pdo_pgsql pdo_sqlite
     pgsql posix readline session simplexml sockets soap sodium sqlite3
     tokenizer xmlreader xmlwriter zip zlib

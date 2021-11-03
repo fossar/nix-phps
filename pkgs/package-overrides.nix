@@ -12,21 +12,20 @@ let
 in
 
 {
+  buildPecl =
+    {
+      internalDeps ? [],
+      ...
+    }@args:
+
+    prev.buildPecl (args // {
+      # We started bundling hash so we need to remove
+      # references to the external extension which no longer exists.
+      internalDeps = builtins.filter (d: d != null) internalDeps;
+    });
+
   tools = prev.tools // {
     php-cs-fixer-2 = final.callPackage ./php-cs-fixer/2.x.nix { };
-
-    # Downgrade composer to a version that builds with our PHP versions.
-    composer =
-      if lib.versionOlder prev.php.version "7.4" then
-        prev.tools.composer.overrideAttrs (attrs: rec {
-          version = "2.1.5";
-          src = pkgs.fetchurl {
-            url = "https://getcomposer.org/download/${version}/composer.phar";
-            sha256 = "be95557cc36eeb82da0f4340a469bad56b57f742d2891892dcb2f8b0179790ec";
-          };
-        })
-      else
-        prev.tools.composer;
   };
 
   extensions = prev.extensions // {
@@ -75,6 +74,9 @@ in
           rm tests/bug43364.phpt
         '';
     });
+
+    # We now bundle the extension with PHP like PHP ≥ 7.4 does.
+    hash = null;
 
     intl = prev.extensions.intl.overrideAttrs (attrs: {
       doCheck = if lib.versionOlder prev.php.version "7.2" then false else attrs.doCheck or true;
