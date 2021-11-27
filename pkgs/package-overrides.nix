@@ -269,6 +269,45 @@ in
       else
         throw "php.extensions.redis3 requires PHP version < 8.0.";
 
+    xdebug =
+      # xdebug versions were determined using https://xdebug.org/docs/compat
+      if lib.versionAtLeast prev.php.version "7.2" then
+        prev.extensions.xdebug.overrideAttrs (attrs: {
+          name = "xdebug-3.1.1";
+          version = "3.1.1";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/xdebug-3.1.1.tgz";
+            sha256 = "0s0s1n80z3rivp4ah2g3hxj3j4kgqpfnqql4h33a9i2dvc7sxqwv";
+          };
+        })
+      else if lib.versionAtLeast prev.php.version "7.1" then
+        prev.extensions.xdebug.overrideAttrs (attrs: {
+          name = "xdebug-2.9.8";
+          version = "2.9.8";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/xdebug-2.9.8.tgz";
+            sha256 = "12igfrdfisqfmfqpc321g93pm2w1y7h24bclmxjrjv6rb36bcmgm";
+          };
+        })
+      else if lib.versionAtLeast prev.php.version "7.0" then
+        prev.extensions.xdebug.overrideAttrs (attrs: {
+            name = "xdebug-2.7.2";
+            version = "2.7.2";
+            src = pkgs.fetchurl {
+              url = "http://pecl.php.net/get/xdebug-2.7.2.tgz";
+              sha256 = "19m40n5h339yk0g458zpbsck1lslhnjsmhrp076kzhl5l4x2iwxh";
+            };
+          })
+      else
+        prev.extensions.xdebug.overrideAttrs (attrs: {
+          name = "xdebug-2.5.5";
+          version = "2.5.5";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/xdebug-2.5.5.tgz";
+            sha256 = "197i1fcspbrdxki6rljvpjdxzhyaxl7nlihhiqcyfkjipkr8n43j";
+          };
+        });
+
     zlib = prev.extensions.zlib.overrideAttrs (attrs: {
       patches =
         builtins.filter
