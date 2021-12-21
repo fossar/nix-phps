@@ -23,6 +23,7 @@ The following versions are currently supported:
 - `php73`
 - `php74`
 - `php80`
+- `php81`
 
 There is also a `php` package which is the alias of the default PHP version in Nixpkgs.
 

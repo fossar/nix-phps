@@ -15,6 +15,8 @@ jobs:
       matrix:
         php:
           - major: 8
+            minor: 1
+          - major: 8
             minor: 0
           - major: 7
             minor: 4
