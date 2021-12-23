@@ -216,6 +216,24 @@ in
       else
         prev.extensions.openssl;
 
+    pdo = prev.extensions.pdo.overrideAttrs (attrs: {
+      patches =
+        let
+          upstreamPatches =
+            attrs.patches or [];
+
+          ourPatches =
+            lib.optionals (lib.versionOlder prev.php.version "7.2") [
+              # Fix Darwin builds on 7.1
+              (pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/11eed9f3ba7429be467b54d8407cfbd6bd7e6f3a.patch";
+                sha256 = "1mvdsc3kc1fb2l3fh6hva20gyay1214zqj24mavp7x6g0ngii06l";
+              })
+            ];
+        in
+        ourPatches ++ upstreamPatches;
+    });
+
     pdo_mysql =
       if lib.versionOlder prev.php.version "7.0" then
         prev.extensions.pdo_mysql.overrideAttrs (attrs: {
