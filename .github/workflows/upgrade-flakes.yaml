@@ -1,10 +1,20 @@
-name: 'Update flakes'
-
+name: Update Flake lockfile
 on:
-  workflow_dispatch:
+  workflow_dispatch: # allows manual triggering
   schedule:
-    - cron: '51 2 * * 0'
+    - cron: "51 2 * * 0"
 
 jobs:
-  createPullRequest:
-    uses: loophp/flake-lock-update-workflow/.github/workflows/upgrade-flakes.yaml@main
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
+
+      - name: Update flake.lock
+        uses: DeterminateSystems/update-flake-lock@v6
