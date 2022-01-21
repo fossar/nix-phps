@@ -1,0 +1,16 @@
+name: EditorConfig checks
+on:
+  push:
+  pull_request:
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Check files for EditorConfig compliance
+        uses: editorconfig-checker/action-editorconfig-checker@v1
