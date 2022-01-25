@@ -291,11 +291,11 @@ in
       # xdebug versions were determined using https://xdebug.org/docs/compat
       if lib.versionAtLeast prev.php.version "7.2" then
         prev.extensions.xdebug.overrideAttrs (attrs: {
-          name = "xdebug-3.1.1";
-          version = "3.1.1";
+          name = "xdebug-3.1.2";
+          version = "3.1.2";
           src = pkgs.fetchurl {
             url = "http://pecl.php.net/get/xdebug-3.1.1.tgz";
-            sha256 = "0s0s1n80z3rivp4ah2g3hxj3j4kgqpfnqql4h33a9i2dvc7sxqwv";
+            sha256 = "1wycg5kzm15dq6db3yc0xgq3baqbjg1sz784vz5rrxqd23hnngq8";
           };
         })
       else if lib.versionAtLeast prev.php.version "7.1" then
