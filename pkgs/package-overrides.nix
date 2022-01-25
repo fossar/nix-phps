@@ -287,6 +287,20 @@ in
       else
         throw "php.extensions.redis3 requires PHP version < 8.0.";
 
+    tidy = prev.extensions.tidy.overrideAttrs (attrs: {
+      patches =
+        let
+          upstreamPatches =
+            attrs.patches or [];
+
+          ourPatches =
+            lib.optionals (lib.versionOlder prev.php.version "7.1") [
+              ./tidy-html5.patch
+            ];
+        in
+        ourPatches ++ upstreamPatches;
+    });
+
     xdebug =
       # xdebug versions were determined using https://xdebug.org/docs/compat
       if lib.versionAtLeast prev.php.version "7.2" then
