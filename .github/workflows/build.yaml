@@ -64,6 +64,9 @@ jobs:
       - name: Build Xdebug extension
         run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.xdebug
 
+      - name: Build Tidy extension
+        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.tidy
+
       - name: Check that composer PHAR works
         run: |
           nix-shell -E '
