@@ -104,6 +104,11 @@ in
                   patch "$out" < ${if lib.versionOlder prev.php.version "7.0" then ./patches/intl-icu-patch-5.6-compat.patch else ./patches/intl-icu-patch-7.0-compat.patch}
                 '';
               })
+            ] ++
+            lib.optionals (lib.versions.majorMinor prev.php.version == "7.2") [
+              # Fix compiling issue on Darwin platforms.
+              # See bug #76826: https://bugs.php.net/bug.php?id=76826
+              ./patches/bug76826.patch
             ];
         in
         ourPatches ++ upstreamPatches;
