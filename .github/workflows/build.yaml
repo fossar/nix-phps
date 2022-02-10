@@ -9,10 +9,13 @@ on:
 
 jobs:
   build:
-    name: 'PHP ${{ matrix.php.major }}.${{ matrix.php.minor }}'
-    runs-on: ubuntu-20.04
+    name: 'PHP ${{ matrix.php.major }}.${{ matrix.php.minor }} on ${{ matrix.operating-system }}'
+    runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
+        operating-system:
+          - ubuntu-latest
+          - macOS-latest
         php:
           - major: 8
             minor: 1
@@ -36,7 +39,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v14
+        uses: cachix/install-nix-action@v16
 
       - name: Set up Nix cache
         uses: cachix/cachix-action@v10
@@ -45,31 +48,31 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Build PHP
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}
+        run: nix build .#php${{ matrix.php.major }}${{ matrix.php.minor }}
 
       - name: Build Imagick extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.imagick
+        run: nix build .#php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.imagick
 
       - name: Build Redis extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis
+        run: nix build .#php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis
 
       - name: Build Redis 3 extension
         if: ${{ matrix.php.major < 8 }}
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis3
+        run: nix build .#php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis3
 
       - name: Build MySQL extension
         if: ${{ matrix.php.major < 7 }}
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.mysql
+        run: nix build .#php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.mysql
 
       - name: Build Xdebug extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.xdebug
+        run: nix build .#php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.xdebug
 
       - name: Build Tidy extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.tidy
+        run: nix build .#php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.tidy
 
       - name: Check that composer PHAR works
         run: |
-          nix-shell -E '
+          nix develop --impure --expr '
             let
               self = import ./.;
               composer =
@@ -81,11 +84,11 @@ jobs:
                   composer
                 ];
               }
-          ' --run "composer --version"
+          ' -c composer --version
 
       - name: Validate php.extensions.mysqli default unix socket path
         run: |
-          nix-shell -E '
+          nix develop --impure --expr '
             let
               self = import ./.;
               php =
@@ -98,11 +101,11 @@ jobs:
                   php
                 ];
               }
-          ' --run "php -r \"echo ini_get('mysqli.default_socket') . PHP_EOL;\" | grep /run/mysqld/mysqld.sock"
+          ' -c php -r "echo ini_get('mysqli.default_socket') . PHP_EOL;" | grep /run/mysqld/mysqld.sock
 
       - name: Validate php.extensions.pdo_mysql default unix socket path
         run: |
-          nix-shell -E '
+          nix develop --impure --expr '
             let
               self = import ./.;
               php =
@@ -115,4 +118,4 @@ jobs:
                   php
                 ];
               }
-          ' --run "php -r \"echo ini_get('pdo_mysql.default_socket') . PHP_EOL;\" | grep /run/mysqld/mysqld.sock"
+          ' -c php -r "echo ini_get('pdo_mysql.default_socket') . PHP_EOL;" | grep /run/mysqld/mysqld.sock
