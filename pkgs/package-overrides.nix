@@ -295,7 +295,12 @@ in
 
           ourPatches =
             lib.optionals (lib.versionOlder prev.php.version "7.1") [
-              ./tidy-html5.patch
+              # Add support for the new tidy-html5 library.
+              # https://github.com/php/php-src/commit/a552ac5bd589035b66c899b74511b29a3d1a4718
+              (pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/a552ac5bd589035b66c899b74511b29a3d1a4718.patch";
+                sha256 = "bXDgtCYwxZ9sQLNh3RR1W+g8JWn0ottRhK5LNTtDBVA=";
+              })
             ];
         in
         ourPatches ++ upstreamPatches;
