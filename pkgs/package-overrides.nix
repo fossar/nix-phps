@@ -92,7 +92,7 @@ in
                 url = "https://github.com/php/php-src/commit/8d35a423838eb462cd39ee535c5d003073cc5f22.patch";
                 sha256 = if lib.versionOlder prev.php.version "7.0" then "8v0k6zaE5w4yCopCVa470TMozAXyK4fQelr+KuVnAv4=" else "NO3EY5z1LFWKor9c/9rJo1rpigG5x8W3Uj5+xAOwm+g=";
                 postFetch = ''
-                  patch "$out" < ${if lib.versionOlder prev.php.version "7.0" then ./intl-icu-patch-5.6-compat.patch else ./intl-icu-patch-7.0-compat.patch}
+                  patch "$out" < ${if lib.versionOlder prev.php.version "7.0" then ./patches/intl-icu-patch-5.6-compat.patch else ./patches/intl-icu-patch-7.0-compat.patch}
                 '';
               })
             ];
@@ -110,7 +110,7 @@ in
             lib.optionals (lib.versionOlder prev.php.version "8.0") [
               # Header path defaults to FHS location, preventing the configure script from detecting errno support.
               # TODO: re-add when PHP 7 is removed from Nixpkgs.
-              # ./iconv-header-path.patch
+              # ./patches/iconv-header-path.patch
             ];
         in
         ourPatches ++ upstreamPatches;
