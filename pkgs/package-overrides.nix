@@ -67,12 +67,20 @@ in
         in
         ourPatches ++ upstreamPatches;
 
-      preCheck = attrs.preCheck or "" +
-        lib.optionalString (lib.versionOlder prev.php.version "7.4" && lib.versionAtLeast prev.php.version "7.3") ''
-          rm tests/bug80268.phpt
-        '' + lib.optionalString (lib.versionOlder prev.php.version "7.4") ''
-          rm tests/bug43364.phpt
-        '';
+      postPatch =
+        lib.concatStringsSep "\n" [
+          (attrs.postPatch or "")
+
+          (lib.optionalString (lib.versionOlder prev.php.version "7.4" && lib.versionAtLeast prev.php.version "7.3") ''
+            # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
+            rm tests/bug80268.phpt
+          '')
+
+          (lib.optionalString (lib.versionOlder prev.php.version "7.4") ''
+            # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
+            rm tests/bug43364.phpt
+          '')
+        ];
     });
 
     # We now bundle the extension with PHP like PHP ≥ 7.4 does.
@@ -92,6 +100,7 @@ in
                 url = "https://github.com/php/php-src/commit/8d35a423838eb462cd39ee535c5d003073cc5f22.patch";
                 sha256 = if lib.versionOlder prev.php.version "7.0" then "8v0k6zaE5w4yCopCVa470TMozAXyK4fQelr+KuVnAv4=" else "NO3EY5z1LFWKor9c/9rJo1rpigG5x8W3Uj5+xAOwm+g=";
                 postFetch = ''
+                  # Resolve conflicts of the upstream patch with the old PHP source tree.
                   patch "$out" < ${if lib.versionOlder prev.php.version "7.0" then ./patches/intl-icu-patch-5.6-compat.patch else ./patches/intl-icu-patch-7.0-compat.patch}
                 '';
               })
