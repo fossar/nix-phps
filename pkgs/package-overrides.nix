@@ -356,5 +356,18 @@ in
           )
           (attrs.patches or []);
     });
+
+    gd =
+      if lib.versionOlder prev.php.version "7.4" then
+        prev.extensions.gd.overrideAttrs (attrs: {
+          buildInputs = attrs.buildInputs ++ [
+            # Older versions of PHP check for these libraries even when not using bundled gd.
+            pkgs.zlib
+            pkgs.libjpeg
+            pkgs.libpng
+          ];
+        })
+      else
+        prev.extensions.gd;
   };
 }
