@@ -207,24 +207,6 @@ in
           (attrs.patches or []);
     });
 
-    openssl =
-      if lib.versionOlder prev.php.version "7.1" then
-        prev.extensions.openssl.overrideAttrs (attrs: {
-          # PHP ≤ 7.0 requires openssl 1.0.
-          buildInputs =
-            let
-              openssl_1_0_2 = pkgs.openssl_1_0_2.overrideAttrs (attrs: {
-                meta = attrs.meta // {
-                  # It is insecure but that should not matter in an isolated test environment.
-                  knownVulnerabilities = [];
-                };
-              });
-            in
-              map (p: if p == pkgs.openssl then openssl_1_0_2 else p) attrs.buildInputs or [];
-          })
-      else
-        prev.extensions.openssl;
-
     pdo = prev.extensions.pdo.overrideAttrs (attrs: {
       patches =
         let
