@@ -207,23 +207,25 @@ in
           (attrs.patches or []);
     });
 
-    openssl =
-      if lib.versionOlder prev.php.version "7.1" then
-        prev.extensions.openssl.overrideAttrs (attrs: {
-          # PHP ≤ 7.0 requires openssl 1.0.
-          buildInputs =
-            let
-              openssl_1_0_2 = pkgs.openssl_1_0_2.overrideAttrs (attrs: {
-                meta = attrs.meta // {
-                  # It is insecure but that should not matter in an isolated test environment.
-                  knownVulnerabilities = [];
-                };
-              });
-            in
-              map (p: if p == pkgs.openssl then openssl_1_0_2 else p) attrs.buildInputs or [];
-          })
-      else
-        prev.extensions.openssl;
+    openssl = prev.extensions.openssl.overrideAttrs (attrs: {
+      patches =
+        let
+          upstreamPatches =
+            attrs.patches or [];
+
+          ourPatches =
+            lib.optionals (lib.versionOlder prev.php.version "7.0") [
+              # PHP ≤ 5.6 requires openssl 1.0.
+              # https://github.com/php-build/php-build/pull/609
+              # https://github.com/oerdnj/deb.sury.org/issues/566
+              (pkgs.fetchurl {
+                url = "https://github.com/php-build/php-build/raw/43c8e02689bc29d48daa338b73bcd4f2bbd8def1/share/php-build/patches/php-5.6-support-openssl-1.1.0.patch";
+                sha256 = "UHu3SyYSMozfXlm5ZGRaSdD5NnrdAB7NaY4P0NREVCE=";
+              })
+            ];
+        in
+        ourPatches ++ upstreamPatches;
+    });
 
     pdo = prev.extensions.pdo.overrideAttrs (attrs: {
       patches =
