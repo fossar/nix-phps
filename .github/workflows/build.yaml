@@ -45,74 +45,33 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Build PHP
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-php
 
       - name: Build Imagick extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.imagick
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-imagick
 
       - name: Build Redis extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-redis
 
       - name: Build Redis 3 extension
         if: ${{ matrix.php.major < 8 }}
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.redis3
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-redis3
 
       - name: Build MySQL extension
         if: ${{ matrix.php.major < 7 }}
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.mysql
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-mysql
 
       - name: Build Xdebug extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.xdebug
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-xdebug
 
       - name: Build Tidy extension
-        run: nix-build -A outputs.packages.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}.extensions.tidy
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-tidy
 
       - name: Check that composer PHAR works
-        run: |
-          nix-shell -E '
-            let
-              self = import ./.;
-              composer =
-                self.outputs.packages.${builtins.currentSystem}.php${{ matrix.php.major }}${{ matrix.php.minor }}.packages.composer;
-              pkgs = import self.inputs.nixpkgs { };
-            in
-              pkgs.mkShell {
-                packages = [
-                  composer
-                ];
-              }
-          ' --run "composer --version"
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-composer-phar
 
       - name: Validate php.extensions.mysqli default unix socket path
-        run: |
-          nix-shell -E '
-            let
-              self = import ./.;
-              php =
-                self.outputs.packages.${builtins.currentSystem}.php${{ matrix.php.major }}${{ matrix.php.minor }}.withExtensions
-                  ({ all, ... }: [ all.mysqli ]);
-              pkgs = import self.inputs.nixpkgs { };
-            in
-              pkgs.mkShell {
-                packages = [
-                  php
-                ];
-              }
-          ' --run "php -r \"echo ini_get('mysqli.default_socket') . PHP_EOL;\" | grep /run/mysqld/mysqld.sock"
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-mysqli-socket-path
 
       - name: Validate php.extensions.pdo_mysql default unix socket path
-        run: |
-          nix-shell -E '
-            let
-              self = import ./.;
-              php =
-                self.outputs.packages.${builtins.currentSystem}.php${{ matrix.php.major }}${{ matrix.php.minor }}.withExtensions
-                  ({ all, ... }: [ all.pdo_mysql ]);
-              pkgs = import self.inputs.nixpkgs { };
-            in
-              pkgs.mkShell {
-                packages = [
-                  php
-                ];
-              }
-          ' --run "php -r \"echo ini_get('pdo_mysql.default_socket') . PHP_EOL;\" | grep /run/mysqld/mysqld.sock"
+        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-pdo_mysql-socket-path
