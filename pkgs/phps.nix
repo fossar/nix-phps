@@ -16,6 +16,23 @@ let
       pcre2 = if (prev.lib.versionAtLeast args.version "7.3") then prev.pcre2 else prev.pcre;
 
       phpAttrsOverrides = attrs: {
+        patches =
+          let
+            upstreamPatches =
+              attrs.patches or [];
+
+            ourPatches =
+              prev.lib.optionals (prev.lib.versions.majorMinor args.version == "7.2") [
+                # Building the bundled intl extension fails on Mac OS.
+                # See https://bugs.php.net/bug.php?id=76826 for more information.
+                (prev.pkgs.fetchpatch {
+                  url = "https://bugs.php.net/patch-display.php?bug_id=76826&patch=bug76826.poc.0.patch&revision=1538723399&download=1";
+                  sha256 = "aW+MW9Kb8N/yBO7MdqZMZzgMSF7b+IMLulJKgKPWrUA=";
+                })
+              ];
+          in
+          ourPatches ++ upstreamPatches;
+
         configureFlags =
           attrs.configureFlags
           ++ prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") [
