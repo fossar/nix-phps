@@ -5,7 +5,7 @@
 }:
 
 let
-  phpPackages = builtins.filter (name: builtins.match "php[0-9]+" name != null) (builtins.attrNames packages);
+  phpPackages = builtins.filter (name: builtins.match "php([0-9]+|-master)" name != null) (builtins.attrNames packages);
 
   checks = {
     php = {

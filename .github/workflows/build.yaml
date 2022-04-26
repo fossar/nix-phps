@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         php:
+          - branch: 'master'
           - branch: '8.1'
           - branch: '8.0'
           - branch: '7.4'
@@ -40,9 +41,17 @@ jobs:
         id: params
         run: |
           branch=${{ matrix.php.branch }}
-          major=${branch%%.*}
-          minor=${branch#*.}
-          attr=php$major$minor
+          if [[ "$branch" = "master" ]]; then
+              attr=php-master
+              version=$(nix-instantiate --eval --json -A "outputs.packages.x86_64-linux.${attr}.version")
+              # Strip quotes
+              version=${version//\"/}
+              major=${branch%%.*}
+          else
+              major=${branch%%.*}
+              minor=${branch#*.}
+              attr=php$major$minor
+          fi
           echo "::set-output name=major::$major"
           echo "::set-output name=attr::$attr"
 

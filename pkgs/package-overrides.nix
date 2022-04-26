@@ -9,6 +9,8 @@ prev:
 let
   patchName = patch: patch.name or (builtins.baseNameOf patch);
   inherit (pkgs) lib;
+
+  isBuiltFromGit = lib.hasInfix "+date=" prev.php.version;
 in
 
 {
@@ -29,6 +31,29 @@ in
   } // lib.optionalAttrs (lib.versionOlder prev.php.version "7.2.5") {
     composer = final.callPackage ./composer/2.2.nix { };
   };
+
+  # TODO: Address this in Nixpkgs.
+  mkExtension =
+    if lib.hasInfix "+date=" prev.php.version
+    then
+      attrs:
+
+      (prev.mkExtension attrs).overrideAttrs (attrs: {
+        # PHP obtained from Git contains files directly in the top-level directory,
+        # which will be placed in Nix store. The generic builder will then copy it
+        # to the /build sandbox as its basename with hash stripped (e.g. source/).
+        # `mkExtension` expects that PHP source will be extracted into `php-«version»/`
+        # directory like the tarball does and sets sourceRoot accordingly.
+        # Let’s unset the `sourceRoot`, leaving it to `unpackPhase` to find the source
+        # directory, and only change to the extension directory afterwards.
+        sourceRoot = null;
+        prePatch = ''
+          cd "${lib.removePrefix "php-${prev.php.version}/" attrs.sourceRoot}"
+        '' + attrs.prePatch;
+      })
+    else
+      prev.mkExtension;
+
 
   extensions = prev.extensions // {
     apcu =
@@ -318,6 +343,15 @@ in
         in
         ourPatches ++ upstreamPatches;
     });
+
+    tokenizer =
+      prev.extensions.tokenizer.overrideAttrs (attrs: {
+        nativeBuildInputs = attrs.nativeBuildInputs or [ ] ++ lib.optionals isBuiltFromGit [
+          # Tarballs ship pre-generated parser files.
+          pkgs.bison
+          pkgs.flex
+        ];
+      });
 
     xdebug =
       # xdebug versions were determined using https://xdebug.org/docs/compat

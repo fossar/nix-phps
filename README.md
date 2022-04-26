@@ -14,7 +14,7 @@ We use [Cachix](https://app.cachix.org/cache/fossar) to store `x86_64-linux` bin
 
 This package is regularly updated to match latest Nixpkgs and the PHP packages use the [same API as those in Nixpkgs](https://nixos.org/manual/nixpkgs/unstable/#sec-php).
 
-The following versions are currently supported:
+The following versions are currently available:
 
 - `php56`
 - `php70`
@@ -24,6 +24,7 @@ The following versions are currently supported:
 - `php74`
 - `php80`
 - `php81`
+- `php-master`
 
 There is also a `php` package which is the alias of the default PHP version in Nixpkgs.
 
