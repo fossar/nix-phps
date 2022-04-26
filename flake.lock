@@ -32,10 +32,27 @@
         "type": "github"
       }
     },
+    "php-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1694089591,
+        "narHash": "sha256-CWMlTDoqCmi8I8QTFvRobPkd9P+RAESieQb8ltr4VvM=",
+        "owner": "php",
+        "repo": "php-src",
+        "rev": "c8034021625cdd5392b2cb125b657ab5c3a95e42",
+        "type": "github"
+      },
+      "original": {
+        "owner": "php",
+        "repo": "php-src",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "flake-compat": "flake-compat",
         "nixpkgs": "nixpkgs",
+        "php-src": "php-src",
         "utils": "utils"
       }
     },
