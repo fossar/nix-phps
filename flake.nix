@@ -10,10 +10,15 @@
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
+    php-src = {
+      url = "github:php/php-src";
+      flake = false;
+    };
+
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, flake-compat, nixpkgs, utils }:
+  outputs = { self, flake-compat, nixpkgs, php-src, utils }:
     # For each supported platform,
     utils.lib.eachDefaultSystem (system:
       let
@@ -29,7 +34,7 @@
         };
       in rec {
         packages = {
-          inherit (pkgs) php php56 php70 php71 php72 php73 php74 php80 php81;
+          inherit (pkgs) php php56 php70 php71 php72 php73 php74 php80 php81 php-master;
         };
 
         checks = import ./checks.nix {
@@ -37,6 +42,8 @@
         };
       }
     ) // {
-      overlay = import ./pkgs/phps.nix nixpkgs.outPath;
+      overlay = import ./pkgs/phps.nix {
+        inherit nixpkgs php-src;
+      };
     };
 }

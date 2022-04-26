@@ -1,4 +1,7 @@
-nixpkgs:
+{
+  nixpkgs,
+  php-src,
+}:
 
 # These are older versions of PHP removed from Nixpkgs.
 
@@ -43,7 +46,7 @@ let
 
           configureFlags =
             attrs.configureFlags
-            ++ prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") [
+            ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
               # phar extension’s build system expects hash or it will degrade.
               "--enable-hash"
             ];
