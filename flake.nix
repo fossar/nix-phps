@@ -13,7 +13,7 @@
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, flake-compat, nixpkgs, utils }:
+  outputs = { self, flake-compat, nixpkgs, utils }@inputs:
     # For each supported platform,
     utils.lib.eachDefaultSystem (system:
       let
@@ -33,7 +33,7 @@
         };
 
         checks = import ./checks.nix {
-          inherit packages pkgs system;
+          inherit inputs packages pkgs system;
         };
       }
     ) // {

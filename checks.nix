@@ -1,11 +1,18 @@
 {
-  system,
+  inputs,
   packages,
   pkgs,
+  system,
 }:
 
 let
   phpPackages = builtins.filter (name: builtins.match "php[0-9]+" name != null) (builtins.attrNames packages);
+
+  nixos-tests =
+    { php, pkgs, system, ... }:
+    import "${inputs.nixpkgs}/nixos/tests/php" {
+      inherit php pkgs system;
+    };
 
   checks = {
     php = {
@@ -98,6 +105,33 @@ let
             php -r "echo ini_get('pdo_mysql.default_socket') . PHP_EOL;" | grep /run/mysqld/mysqld.sock
             touch "$out"
           '';
+    };
+
+    nixos-fpm = {
+      description = "Run NixOS integration test for php-fpm";
+      # NixOS tests are Linux only.
+      enabled = { pkgs, ... }: pkgs.stdenv.isLinux;
+      drv =
+        { php, pkgs, ... }:
+        (nixos-tests { inherit php pkgs system; }).fpm;
+    };
+
+    nixos-httpd = {
+      description = "Run NixOS integration test for PHP httpd module";
+      # NixOS tests are Linux only.
+      enabled = { pkgs, ... }: pkgs.stdenv.isLinux;
+      drv =
+        { php, pkgs, ... }:
+        (nixos-tests { inherit php pkgs system; }).httpd;
+    };
+
+    nixos-pcre = {
+      description = "Run NixOS integration test for PHP PCRE extension";
+      # NixOS tests are Linux only.
+      enabled = { pkgs, ... }: pkgs.stdenv.isLinux;
+      drv =
+        { php, pkgs, ... }:
+        (nixos-tests { inherit php pkgs system; }).pcre;
     };
   };
 
