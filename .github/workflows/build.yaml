@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         php:
+          - branch: '8.2'
           - branch: '8.1'
           - branch: '8.0'
           - branch: '7.4'
@@ -64,6 +65,7 @@ jobs:
         run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-mysql
 
       - name: Build Xdebug extension
+        if: ${{ steps.params.outputs.major < 8 && steps.params.outputs.minor < 2 }}
         run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-xdebug
 
       - name: Build Tidy extension
