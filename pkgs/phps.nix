@@ -15,7 +15,11 @@ let
   composeOverrides = a: b: prev.lib.composeExtensions (_: a) (_: b) { };
 
   _mkArgs =
-    args:
+    {
+      # Keep default flags in sync with generic.nix
+      pearSupport ? true,
+      ...
+    }@args:
 
     args // {
       inherit packageOverrides;
@@ -58,6 +62,10 @@ let
                 ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
                   # phar extension’s build system expects hash or it will degrade.
                   "--enable-hash"
+                ] ++ prev.lib.optionals (pearSupport && (prev.lib.versionOlder args.version "7.4" || prev.lib.hasPrefix "7.4.0.pre" args.version)) [
+                  # The flag was renamed in 7.4.0RC1 but `generic.nix` applies it for PHP < 7.4.
+                  # https://github.com/php/php-src/commit/9f0c9b7ad6316b6185a2fc2997bf241785c30120
+                  "--enable-libxml"
                 ];
 
               preConfigure =
