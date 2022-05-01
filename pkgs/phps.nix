@@ -59,6 +59,30 @@ let
                   # phar extension’s build system expects hash or it will degrade.
                   "--enable-hash"
                 ];
+
+              preConfigure =
+                attrs.preConfigure
+                + prev.lib.optionalString (prev.lib.versionOlder args.version "7.4" || prev.lib.hasPrefix "7.4.0.pre" args.version) ''
+                  # Workaround “configure: error: Your system does not support systemd.”
+                  # caused by PHP build system expecting PKG_CONFIG variable to contain
+                  # an absolute path on PHP ≤ 7.4.
+                  # `generic.nix` works arounds this by patching the checks but only on PHP < 7.4
+                  # but this is also issue on PHP 7.4 development versions.
+                  # https://github.com/NixOS/nixpkgs/pull/90249
+                  for i in $(find . -type f -name "*.m4"); do
+                    substituteInPlace $i \
+                      --replace 'test -x "$PKG_CONFIG"' 'type -P "$PKG_CONFIG" >/dev/null'
+                  done
+                ''
+                + prev.lib.optionalString (prev.lib.hasPrefix "7.4.0.pre" args.version) ''
+                  # Workaround IFS='.' misinteracting with unquoted Nix store path
+                  # containing a period.
+                  # https://bugs.php.net/bug.php?id=78788
+                  # Introduced in 7.4.0RC1, fixed in 7.4.0RC6.
+                  # https://github.com/php/php-src/commit/afd52f9d9986d92dd0c63832a07ab1a16bf11d53
+                  # https://github.com/php/php-src/pull/4891
+                  substituteInPlace configure.ac --replace 'echo AC_PACKAGE_VERSION | $SED' 'echo AC_PACKAGE_VERSION | "''${SED}"'
+                '';
             };
 
           versionSpecificOverrides = args.phpAttrsOverrides or (attrs: { });
