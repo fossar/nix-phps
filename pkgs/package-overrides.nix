@@ -75,12 +75,12 @@ in
 
           (lib.optionalString (lib.versionOlder prev.php.version "7.4" && lib.versionAtLeast prev.php.version "7.3") ''
             # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
-            rm tests/bug80268.phpt
+            rm ext/dom/tests/bug80268.phpt
           '')
 
           (lib.optionalString (lib.versionOlder prev.php.version "7.4") ''
             # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
-            rm tests/bug43364.phpt
+            rm ext/dom/tests/bug43364.phpt
           '')
         ];
     });
@@ -160,11 +160,9 @@ in
             "--with-mysql"
             "--with-mysql-sock=/run/mysqld/mysqld.sock"
           ];
-          # Fix mysql not being able to find headers.
           postPatch = ''
-            popd
-
-            ln -s $PWD/../../ext/ $PWD
+            # Fix mysql not being able to find headers.
+            ln -s $PWD/ext/ ext/mysql
           '';
         }
       else
@@ -182,9 +180,9 @@ in
     mysqlnd =
       if lib.versionOlder prev.php.version "7.1" then
         prev.extensions.mysqlnd.overrideAttrs (attrs: {
-          # Fix mysqlnd not being able to find headers.
           postPatch = attrs.postPatch or "" + "\n" + ''
-            ln -s $PWD/../../ext/ $PWD
+            # Fix mysqlnd not being able to find headers.
+            ln -s $PWD/ext/ ext/mysqlnd
           '';
         })
       else
