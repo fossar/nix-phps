@@ -8,70 +8,124 @@ on:
   push:
 
 jobs:
-  build:
-    name: 'PHP ${{ matrix.php.major }}.${{ matrix.php.minor }}'
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        php:
-          - major: 8
-            minor: 1
-          - major: 8
-            minor: 0
-          - major: 7
-            minor: 4
-          - major: 7
-            minor: 3
-          - major: 7
-            minor: 2
-          - major: 7
-            minor: 1
-          - major: 7
-            minor: 0
-          - major: 5
-            minor: 6
-      # We want to fix failures individually.
-      fail-fast: false
+  determine-php-matrix:
+    name: Figure out the packages we need to build
+    runs-on: ubuntu-latest
+
+    outputs:
+      php: ${{ steps.set-php-matrix.outputs.php }}
+
     steps:
-      - uses: actions/checkout@v2
+      - name: Set up Git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v14
+        uses: cachix/install-nix-action@v17
+
+      - id: set-php-matrix
+        run: |
+          echo "::set-output name=php::$(
+            nix eval --json --impure \
+              --expr 'builtins.attrNames (import ./.).packages.x86_64-linux'
+          )"
+
+  build:
+    name: "Build #${{ matrix.php }} on ${{ matrix.operating-system }}"
+    needs: [determine-php-matrix]
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      # We want to fix failures individually.
+      fail-fast: false
+      matrix:
+        php: ${{fromJson(needs.determine-php-matrix.outputs.php)}}
+        operating-system: [ubuntu-latest, macOS-latest]
+
+    steps:
+      - name: Set up Git repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v16
 
       - name: Set up Nix cache
         uses: cachix/cachix-action@v10
         with:
           name: fossar
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
 
       - name: Build PHP
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-php
+        run: nix build .#${{ matrix.php }}
 
       - name: Build Imagick extension
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-imagick
+        run: nix build .#${{ matrix.php }}.extensions.imagick
 
       - name: Build Redis extension
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-redis
+        run: nix build .#${{ matrix.php }}.extensions.redis
 
       - name: Build Redis 3 extension
-        if: ${{ matrix.php.major < 8 }}
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-redis3
+        continue-on-error: true
+        run: nix build .#${{ matrix.php }}.extensions.redis3
 
       - name: Build MySQL extension
-        if: ${{ matrix.php.major < 7 }}
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-mysql
+        continue-on-error: true
+        run: nix build .#${{ matrix.php }}.extensions.mysql
 
       - name: Build Xdebug extension
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-xdebug
+        run: nix build .#${{ matrix.php }}.extensions.xdebug
 
       - name: Build Tidy extension
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-tidy
+        run: nix build .#${{ matrix.php }}.extensions.tidy
 
       - name: Check that composer PHAR works
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-composer-phar
+        run: |
+          nix develop --impure --expr '
+            let
+              self = import ./.;
+              composer =
+                self.outputs.packages.${builtins.currentSystem}.${{ matrix.php }}.packages.composer;
+              pkgs = import self.inputs.nixpkgs { };
+            in
+              pkgs.mkShell {
+                packages = [
+                  composer
+                ];
+              }
+          ' -c composer --version
 
       - name: Validate php.extensions.mysqli default unix socket path
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-mysqli-socket-path
+        run: |
+          nix develop --impure --expr '
+            let
+              self = import ./.;
+              php =
+                self.outputs.packages.${builtins.currentSystem}.${{ matrix.php }}.withExtensions
+                  ({ all, ... }: [ all.mysqli ]);
+              pkgs = import self.inputs.nixpkgs { };
+            in
+              pkgs.mkShell {
+                packages = [
+                  php
+                ];
+              }
+          ' -c php -r "echo ini_get('mysqli.default_socket') . PHP_EOL;" | grep /run/mysqld/mysqld.sock
 
       - name: Validate php.extensions.pdo_mysql default unix socket path
-        run: nix-build -A outputs.checks.x86_64-linux.php${{ matrix.php.major }}${{ matrix.php.minor }}-pdo_mysql-socket-path
+        run: |
+          nix develop --impure --expr '
+            let
+              self = import ./.;
+              php =
+                self.outputs.packages.${builtins.currentSystem}.${{ matrix.php }}.withExtensions
+                  ({ all, ... }: [ all.pdo_mysql ]);
+              pkgs = import self.inputs.nixpkgs { };
+            in
+              pkgs.mkShell {
+                packages = [
+                  php
+                ];
+              }
+          ' -c php -r "echo ini_get('pdo_mysql.default_socket') . PHP_EOL;" | grep /run/mysqld/mysqld.sock
