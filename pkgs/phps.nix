@@ -41,11 +41,28 @@ let
             in
             ourPatches ++ upstreamPatches;
 
+          preConfigure =
+            prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") ''
+              # Workaround “configure: error: Your system does not support systemd.”
+              # caused by PHP build system expecting PKG_CONFIG variable to contain
+              # an absolute path on PHP ≤ 7.4.
+              # Also patches acinclude.m4, which ends up being used by extensions.
+              # https://github.com/NixOS/nixpkgs/pull/90249
+              for i in $(find . -type f -name "*.m4"); do
+                substituteInPlace $i \
+                  --replace 'test -x "$PKG_CONFIG"' 'type -P "$PKG_CONFIG" >/dev/null'
+              done
+            ''
+            + attrs.preConfigure;
+
           configureFlags =
             attrs.configureFlags
             ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
               # phar extension’s build system expects hash or it will degrade.
               "--enable-hash"
+
+              "--enable-libxml"
+              "--with-libxml-dir=${prev.libxml2.dev}"
             ];
         };
 
