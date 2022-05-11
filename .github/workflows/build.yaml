@@ -7,73 +7,19 @@ on:
   pull_request:
 
 jobs:
-  build:
-    name: 'PHP ${{ matrix.php.branch }}'
+  prepare-ci:
+    name: 'Prepare actions'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        php:
-          - branch: '8.2'
-          - branch: '8.1'
-          - branch: '8.0'
-          - branch: '7.4'
-          - branch: '7.3'
-          - branch: '7.2'
-          - branch: '7.1'
-          - branch: '7.0'
-          - branch: '5.6'
-      # We want to fix failures individually.
-      fail-fast: false
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Nix
         uses: cachix/install-nix-action@v18
 
-      - name: Set up Nix cache
-        uses: cachix/cachix-action@v12
-        with:
-          name: fossar
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
-      - name: Set job parameters
-        id: params
-        run: |
-          branch=${{ matrix.php.branch }}
-          major=${branch%%.*}
-          minor=${branch#*.}
-          attr=php$major$minor
-          echo "major=$major" >> $GITHUB_OUTPUT
-          echo "attr=$attr" >> $GITHUB_OUTPUT
-
-      - name: Build PHP
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-php
-
-      - name: Build Imagick extension
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-imagick
-
-      - name: Build Redis extension
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-redis
-
-      - name: Build Redis 3 extension
-        if: ${{ steps.params.outputs.major < 8 }}
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-redis3
-
-      - name: Build MySQL extension
-        if: ${{ steps.params.outputs.major < 7 }}
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-mysql
-
-      - name: Build Xdebug extension
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-xdebug
-
-      - name: Build Tidy extension
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-tidy
-
-      - name: Check that composer PHAR works
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-composer-phar
-
-      - name: Validate php.extensions.mysqli default unix socket path
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-mysqli-socket-path
-
-      - name: Validate php.extensions.pdo_mysql default unix socket path
-        run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-pdo_mysql-socket-path
+      - name: Generate actions
+        run: nix-shell .github/workflows/workflow-from-flake-checks.nix
+  test:
+    needs:
+      - prepare-ci
+    uses: ./.github/workflows/test.yaml
+    secrets: inherit

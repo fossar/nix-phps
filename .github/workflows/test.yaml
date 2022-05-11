@@ -1,0 +1,134 @@
+{
+  "jobs": {
+    "test": {
+      "name": "PHP ${{ matrix.php.branch }}",
+      "runs-on": "${{ matrix.os.image }}",
+      "steps": [
+        {
+          "uses": "actions/checkout@v3"
+        },
+        {
+          "name": "Install Nix",
+          "uses": "cachix/install-nix-action@v18"
+        },
+        {
+          "name": "Set up Nix cache",
+          "uses": "cachix/cachix-action@v10",
+          "with": {
+            "authToken": "${{ secrets.CACHIX_AUTH_TOKEN }}",
+            "name": "fossar"
+          }
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Check that composer PHAR works",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-composer-phar"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Build Imagick extension",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-imagick"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\"]'), matrix.php.attr) }}",
+          "name": "Build MySQL extension",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-mysql"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Validate php.extensions.mysqli default unix socket path",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-mysqli-socket-path"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Validate php.extensions.pdo_mysql default unix socket path",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-pdo_mysql-socket-path"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Build PHP",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-php"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Build Redis extension",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-redis"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\"]'), matrix.php.attr) }}",
+          "name": "Build Redis 3 extension",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-redis3"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Build Tidy extension",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-tidy"
+        },
+        {
+          "if": "${{ contains(fromJSON('[\"aarch64-darwin\",\"aarch64-linux\",\"x86_64-darwin\",\"x86_64-linux\"]'), matrix.os.platform) && contains(fromJSON('[\"php56\",\"php70\",\"php71\",\"php72\",\"php73\",\"php74\",\"php80\",\"php81\",\"php82\"]'), matrix.php.attr) }}",
+          "name": "Build Xdebug extension",
+          "run": "nix-build -A outputs.checks.${{ matrix.os.platform }}.${{ matrix.php.attr }}-xdebug"
+        }
+      ],
+      "strategy": {
+        "fail-fast": false,
+        "matrix": {
+          "os": [
+            {
+              "image": "ubuntu-latest",
+              "platform": "x86_64-linux"
+            }
+          ],
+          "php": [
+            {
+              "attr": "php56",
+              "branch": "5.6"
+            },
+            {
+              "attr": "php70",
+              "branch": "7.0"
+            },
+            {
+              "attr": "php71",
+              "branch": "7.1"
+            },
+            {
+              "attr": "php72",
+              "branch": "7.2"
+            },
+            {
+              "attr": "php73",
+              "branch": "7.3"
+            },
+            {
+              "attr": "php74",
+              "branch": "7.4"
+            },
+            {
+              "attr": "php80",
+              "branch": "8.0"
+            },
+            {
+              "attr": "php81",
+              "branch": "8.1"
+            },
+            {
+              "attr": "php82",
+              "branch": "8.2"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "name": "Test",
+  "on": {
+    "workflow_call": {
+      "secrets": {
+        "CACHIX_AUTH_TOKEN": {
+          "required": true
+        }
+      }
+    }
+  }
+}

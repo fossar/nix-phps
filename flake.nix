@@ -66,7 +66,8 @@
                             }:
 
                             drv // {
-                              description = "PHP ${phpVersion} – ${description}";
+                              inherit description;
+                              phpBranch = phpVersion;
                             }
                           )
                           supportedChecks;
