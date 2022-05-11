@@ -130,9 +130,7 @@ let
                     check = drv args;
                   in
                   check // {
-                    passthru = check.passthru or { } // {
-                      description = "PHP ${phpVersion} – ${description}";
-                    };
+                    description = "PHP ${phpVersion} – ${description}";
                   }
                 )
                 supportedChecks;
