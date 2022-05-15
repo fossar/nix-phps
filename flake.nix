@@ -24,7 +24,7 @@
           };
           inherit system;
           overlays = [
-            self.overlay
+            self.overlays.default
           ];
         };
       in rec {
@@ -37,6 +37,6 @@
         };
       }
     ) // {
-      overlay = import ./pkgs/phps.nix nixpkgs.outPath;
+      overlays.default = import ./pkgs/phps.nix nixpkgs.outPath;
     };
 }
