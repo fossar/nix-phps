@@ -168,7 +168,7 @@ in
       if lib.versionOlder prev.php.version "7.0" then
         prev.mkExtension {
           name = "mysql";
-          internalDeps = [ prev.php.extensions.mysqlnd ];
+          internalDeps = [ final.extensions.mysqlnd ];
           configureFlags = [
             "--with-mysql"
             "--with-mysql-sock=/run/mysqld/mysqld.sock"
