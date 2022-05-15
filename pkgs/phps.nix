@@ -25,21 +25,25 @@ let
 
         {
           patches =
-            let
-              upstreamPatches =
-                attrs.patches or [];
+            attrs.patches or []
+            ++ prev.lib.optionals (prev.lib.versions.majorMinor args.version == "7.2") [
+              # Building the bundled intl extension fails on Mac OS.
+              # See https://bugs.php.net/bug.php?id=76826 for more information.
+              (prev.pkgs.fetchpatch {
+                url = "https://bugs.php.net/patch-display.php?bug_id=76826&patch=bug76826.poc.0.patch&revision=1538723399&download=1";
+                sha256 = "aW+MW9Kb8N/yBO7MdqZMZzgMSF7b+IMLulJKgKPWrUA=";
+              })
+            ];
 
-              ourPatches =
-                prev.lib.optionals (prev.lib.versions.majorMinor args.version == "7.2") [
-                  # Building the bundled intl extension fails on Mac OS.
-                  # See https://bugs.php.net/bug.php?id=76826 for more information.
-                  (prev.pkgs.fetchpatch {
-                    url = "https://bugs.php.net/patch-display.php?bug_id=76826&patch=bug76826.poc.0.patch&revision=1538723399&download=1";
-                    sha256 = "aW+MW9Kb8N/yBO7MdqZMZzgMSF7b+IMLulJKgKPWrUA=";
-                  })
-                ];
-            in
-            ourPatches ++ upstreamPatches;
+          configureFlags =
+            attrs.configureFlags
+            ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
+              # phar extension’s build system expects hash or it will degrade.
+              "--enable-hash"
+
+              "--enable-libxml"
+              "--with-libxml-dir=${prev.libxml2.dev}"
+            ];
 
           preConfigure =
             prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") ''
@@ -54,16 +58,6 @@ let
               done
             ''
             + attrs.preConfigure;
-
-          configureFlags =
-            attrs.configureFlags
-            ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
-              # phar extension’s build system expects hash or it will degrade.
-              "--enable-hash"
-
-              "--enable-libxml"
-              "--with-libxml-dir=${prev.libxml2.dev}"
-            ];
         };
 
       # For passing pcre2 to php-packages.nix.
