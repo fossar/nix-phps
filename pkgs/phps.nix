@@ -107,9 +107,7 @@ in
 
   php73 = import ./php/7.3.nix { inherit prev mkPhp; };
 
-  php74 = prev.php74.override {
-    inherit packageOverrides;
-  };
+  php74 = import ./php/7.4.nix { inherit prev mkPhp; };
 
   php80 = prev.php80.override {
     inherit packageOverrides;
