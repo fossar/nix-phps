@@ -290,14 +290,20 @@ in
 
     oci8 =
       if lib.versionOlder prev.php.version "7.0" then
-        prev.extensions.oci8.override ({
-          version = "2.0.12";
-          sha256 = "1khqa7fs8dbyjclx05a5ls1f8paw1ij21qwlx3v7p8i3iqhnymkj";
+        prev.extensions.oci8.overrideAttrs (attrs: {
+          name = "oci8-2.0.12";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/oci8-2.0.12.tgz";
+            sha256 = "1khqa7fs8dbyjclx05a5ls1f8paw1ij21qwlx3v7p8i3iqhnymkj";
+          };
         })
       else if lib.versionOlder prev.php.version "8.0" then
-        prev.extensions.oci8.override ({
-          version = "2.2.0";
-          sha256 = "0jhivxj1nkkza4h23z33y7xhffii60d7dr51h1czjk10qywl7pyd";
+        prev.extensions.oci8.overrideAttrs (attrs: {
+          name = "oci8-2.2.0";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/oci8-2.2.0.tgz";
+            sha256 = "0jhivxj1nkkza4h23z33y7xhffii60d7dr51h1czjk10qywl7pyd";
+          };
         })
       else
         prev.extensions.oci8;
