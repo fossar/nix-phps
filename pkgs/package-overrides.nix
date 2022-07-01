@@ -212,7 +212,8 @@ in
           name = "json";
         }
       else
-        null;
+        # See https://php.watch/versions/8.0/ext-json
+        throw "The JSON extension is now enabled by default in PHP >= 8.";
 
     memcached =
       if lib.versionOlder prev.php.version "7.0" then
