@@ -3,7 +3,7 @@
 let
   base = mkPhp {
     version = "5.6.40";
-    sha256 = "/9Al00YjVTqy9/2Psh0Mnm+fow3FZcoDode3YwI/ugA=";
+    hash = "sha256-/9Al00YjVTqy9/2Psh0Mnm+fow3FZcoDode3YwI/ugA=";
   };
 in
 base.withExtensions (

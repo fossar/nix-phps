@@ -3,7 +3,7 @@
 let
   base = mkPhp {
     version = "8.2.0alpha3";
-    sha256 = null;
+    hash = null;
 
     phpAttrsOverrides = attrs: {
       src = prev.fetchurl {

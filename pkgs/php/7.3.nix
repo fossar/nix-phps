@@ -3,7 +3,7 @@
 let
   base = mkPhp {
     version = "7.3.28";
-    sha256 = "0r4r8famg3a8x6ch24y1370nsphkxg4k9zq5x8v88f4l8mj6wqwg";
+    hash = "sha256-j2NuZEWUOIQ26gX/NMnrE15twRnBEwGZ6UiNV5VDmWQ=";
 
     extraPatches =
       prev.lib.optionals prev.stdenv.isDarwin [
