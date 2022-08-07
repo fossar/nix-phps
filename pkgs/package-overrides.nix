@@ -339,6 +339,19 @@ in
         ourPatches ++ upstreamPatches;
     });
 
+    pcntl = prev.extensions.pcntl.overrideAttrs (attrs: {
+      patches =
+        attrs.patches or []
+        ++ lib.optionals (lib.versionAtLeast prev.php.version "8.2") [
+          # Fix pcntl builds
+          # More info at https://github.com/php/php-src/pull/9284
+          (pkgs.fetchpatch {
+            url = "https://github.com/php/php-src/commit/663b037c7b54c1b829d59ed8f35ceb38d8cc3975.patch";
+            sha256 = "PJrV69RUBG9xSKLm8sffIp8WgsmxWLtK2iLQFWCjmXQ=";
+          })
+        ];
+    });
+
     pdo = prev.extensions.pdo.overrideAttrs (attrs: {
       patches =
         let
