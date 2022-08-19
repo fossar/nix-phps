@@ -2,13 +2,13 @@
 
 let
   base = mkPhp {
-    version = "8.2.0beta2";
+    version = "8.2.0beta3";
     hash = null;
 
     phpAttrsOverrides = attrs: {
       src = prev.fetchurl {
-        url = "https://downloads.php.net/~sergey/php-8.2.0beta2.tar.xz";
-        sha256 = "z/tG1UWLUuk4dlhMd2MWIAA+Qgy+EZ/oZJJfyhiOAb0=";
+        url = "https://downloads.php.net/~pierrick/php-8.2.0beta3.tar.xz";
+        sha256 = "veQ1Z/P0Ms01+k5Tj+JIrLoCXc7rkggajGmtzPGX50c=";
       };
     };
   };
