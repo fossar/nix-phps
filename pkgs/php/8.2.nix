@@ -7,8 +7,8 @@ let
 
     phpAttrsOverrides = attrs: {
       src = prev.fetchurl {
-        url = "https://downloads.php.net/~pierrick/php-8.2.0RC1.tar.xz";
-        sha256 = "k7s6CzdxZ+GIE+nIKdja8WERYdeIonxQV70jyYRv9ug=";
+        url = "https://downloads.php.net/~sergey/php-8.2.0RC2.tar.xz";
+        sha256 = "BrUEDS7YaFZxdaPC9+NJWsrzdv6DNRQqODjEncf1hj0=";
       };
     };
   };
