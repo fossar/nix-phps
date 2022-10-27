@@ -45,6 +45,12 @@ let
               "--with-libxml-dir=${prev.libxml2.dev}"
             ];
 
+          buildInputs =
+            attrs.buildInputs
+            ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.1") [
+              prev.libxcrypt
+            ];
+
           preConfigure =
             prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") ''
               # Workaround “configure: error: Your system does not support systemd.”
