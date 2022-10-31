@@ -45,6 +45,7 @@ base.withExtensions (
       simplexml
       sockets
       soap
+      sysvsem
       sqlite3
       tokenizer
       xmlreader
