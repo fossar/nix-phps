@@ -37,7 +37,6 @@ let
 
     xdebug = {
       description = "Build Xdebug extension";
-      enabled = { php, lib, ... }: lib.versionOlder php.version "8.2";
       drv = { php, ... }: php.extensions.xdebug;
     };
 
