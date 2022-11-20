@@ -123,5 +123,7 @@ in
     inherit packageOverrides;
   };
 
-  php82 = import ./php/8.2.nix { inherit prev mkPhp; };
+  php82 = prev.php82.override {
+    inherit packageOverrides;
+  };
 }
