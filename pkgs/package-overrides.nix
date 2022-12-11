@@ -476,16 +476,16 @@ in
     xdebug =
       # xdebug versions were determined using https://xdebug.org/docs/compat
       if lib.versionAtLeast prev.php.version "8.2" then
+        prev.extensions.xdebug
+      else if lib.versionAtLeast prev.php.version "7.2" then
         prev.extensions.xdebug.overrideAttrs (attrs: {
-          name = "xdebug-3.2.0RC2";
-          version = "3.2.0RC2";
+          name = "xdebug-3.1.6";
+          version = "3.1.6";
           src = pkgs.fetchurl {
-            url = "http://pecl.php.net/get/xdebug-3.2.0RC2.tgz";
-            sha256 = "dQgXDP3Ifg+D0niWxaJ4ec71Vfr8KH40jv6QbxSyY+4=";
+            url = "http://pecl.php.net/get/xdebug-3.1.6.tgz";
+            sha256 = "1lnmrb5kgq8lbhjs48j3wwhqgk44pnqb1yjq4b5r6ysv9l5wlkjm";
           };
         })
-      else if lib.versionAtLeast prev.php.version "7.2" then
-        prev.extensions.xdebug
       else if lib.versionAtLeast prev.php.version "7.1" then
         prev.extensions.xdebug.overrideAttrs (attrs: {
           name = "xdebug-2.9.8";
