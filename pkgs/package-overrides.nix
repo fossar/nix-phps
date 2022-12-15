@@ -475,7 +475,7 @@ in
 
     xdebug =
       # xdebug versions were determined using https://xdebug.org/docs/compat
-      if lib.versionAtLeast prev.php.version "8.2" then
+      if lib.versionAtLeast prev.php.version "8.0" then
         prev.extensions.xdebug
       else if lib.versionAtLeast prev.php.version "7.2" then
         prev.extensions.xdebug.overrideAttrs (attrs: {
