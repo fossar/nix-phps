@@ -5,7 +5,6 @@
   lib,
   php,
 }:
-
 mkDerivation rec {
   pname = "php-cs-fixer";
   version = "2.19.0";
@@ -15,8 +14,8 @@ mkDerivation rec {
     sha256 = "sha256-3K91VkeaHPx+zhGiA8QkfWH6voblCbDilTkRH2uCAYw=";
   };
 
-  phases = [ "installPhase" ];
-  nativeBuildInputs = [ makeWrapper ];
+  phases = ["installPhase"];
+  nativeBuildInputs = [makeWrapper];
 
   installPhase = ''
     runHook preInstall
@@ -33,6 +32,6 @@ mkDerivation rec {
     description = "A tool to automatically fix PHP coding standards issues";
     license = licenses.mit;
     homepage = "http://cs.sensiolabs.org/";
-    maintainers = with maintainers; [ jtojnar ] ++ teams.php.members;
+    maintainers = with maintainers; [jtojnar] ++ teams.php.members;
   };
 }

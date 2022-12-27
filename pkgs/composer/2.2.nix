@@ -1,35 +1,41 @@
-{ mkDerivation, fetchurl, makeWrapper, unzip, lib, php }:
-let
+{
+  mkDerivation,
+  fetchurl,
+  makeWrapper,
+  unzip,
+  lib,
+  php,
+}: let
   pname = "composer";
   version = "2.2.12";
 in
-mkDerivation {
-  inherit pname version;
+  mkDerivation {
+    inherit pname version;
 
-  src = fetchurl {
-    url = "https://getcomposer.org/download/${version}/composer.phar";
-    sha256 = "sha256-HOkGh+s/iamcBZ1F3UGdCEMO0klGhUS5MrHa1/si3aA=";
-  };
+    src = fetchurl {
+      url = "https://getcomposer.org/download/${version}/composer.phar";
+      sha256 = "sha256-HOkGh+s/iamcBZ1F3UGdCEMO0klGhUS5MrHa1/si3aA=";
+    };
 
-  dontUnpack = true;
+    dontUnpack = true;
 
-  nativeBuildInputs = [ makeWrapper ];
+    nativeBuildInputs = [makeWrapper];
 
-  installPhase = ''
-    runHook preInstall
-    mkdir -p $out/bin
-    install -D $src $out/libexec/composer/composer.phar
-    makeWrapper ${php}/bin/php $out/bin/composer \
-      --add-flags "$out/libexec/composer/composer.phar" \
-      --prefix PATH : ${lib.makeBinPath [ unzip ]}
-    runHook postInstall
-  '';
+    installPhase = ''
+      runHook preInstall
+      mkdir -p $out/bin
+      install -D $src $out/libexec/composer/composer.phar
+      makeWrapper ${php}/bin/php $out/bin/composer \
+        --add-flags "$out/libexec/composer/composer.phar" \
+        --prefix PATH : ${lib.makeBinPath [unzip]}
+      runHook postInstall
+    '';
 
-  meta = with lib; {
-    description = "Dependency Manager for PHP";
-    license = licenses.mit;
-    homepage = "https://getcomposer.org/";
-    changelog = "https://github.com/composer/composer/releases/tag/${version}";
-    maintainers = with maintainers; [ offline ] ++ teams.php.members;
-  };
-}
+    meta = with lib; {
+      description = "Dependency Manager for PHP";
+      license = licenses.mit;
+      homepage = "https://getcomposer.org/";
+      changelog = "https://github.com/composer/composer/releases/tag/${version}";
+      maintainers = with maintainers; [offline] ++ teams.php.members;
+    };
+  }
