@@ -35,6 +35,7 @@ in
 
   tools = prev.tools // {
     php-cs-fixer-2 = final.callPackage ./php-cs-fixer/2.x.nix { };
+    composer-1 = final.callPackage ./composer/1.x.nix { };
   } // lib.optionalAttrs (lib.versionOlder prev.php.version "7.2.5") {
     composer = final.callPackage ./composer/2.2.nix { };
   };
