@@ -13,7 +13,16 @@ let
           url = "https://github.com/NixOS/nixpkgs/raw/42e9a2ccfab2a96d28c3c164a6cf41fb6f769de5/pkgs/development/interpreters/php/php73-darwin-isfinite.patch";
           sha256 = "V0mLLmXa2qJyxIVW/7nEml6cXZTBbr42kkJiij9KPyk=";
         })
-      ];
+        # Handle macos versions that don't start with 10.* in libtool.
+        # https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d
+        (prev.pkgs.fetchpatch2 {
+          url = "https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d.patch";
+          sha256 = "sha256-x0vEcoXNFeQi3re1TrK/Np9AH5dy3wf95xM08xCyGE0=";
+          includes = [
+            "build/libtool.m4"
+          ];
+        })
+    ];
   };
 in
 base.withExtensions (

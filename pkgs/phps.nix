@@ -43,6 +43,9 @@ let
 
               "--enable-libxml"
               "--with-libxml-dir=${prev.libxml2.dev}"
+            ]
+            ++ prev.lib.optionals (prev.lib.versionAtLeast args.version "7.3") [
+              "--with-pcre-regex=${prev.pcre2.dev}"
             ];
 
           buildInputs =
