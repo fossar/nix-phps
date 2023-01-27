@@ -33,6 +33,17 @@ let
                 url = "https://bugs.php.net/patch-display.php?bug_id=76826&patch=bug76826.poc.0.patch&revision=1538723399&download=1";
                 sha256 = "aW+MW9Kb8N/yBO7MdqZMZzgMSF7b+IMLulJKgKPWrUA=";
               })
+            ]
+            ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
+              # Handle macos versions that don't start with 10.* in libtool.
+              # https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d
+              (prev.pkgs.fetchpatch2 {
+                url = "https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d.patch";
+                sha256 = "sha256-x0vEcoXNFeQi3re1TrK/Np9AH5dy3wf95xM08xCyGE0=";
+                includes = [
+                  "build/libtool.m4"
+                ];
+              })
             ];
 
           configureFlags =
@@ -44,8 +55,15 @@ let
               "--enable-libxml"
               "--with-libxml-dir=${prev.libxml2.dev}"
             ]
-            ++ prev.lib.optionals (prev.lib.versionAtLeast args.version "7.3") [
-              "--with-pcre-regex=${prev.pcre2.dev}"
+            ++ prev.lib.optionals (prev.lib.versions.majorMinor args.version == "7.3") [
+              # Force use of pkg-config.
+              # https://github.com/php/php-src/blob/php-7.3.33/ext/pcre/config0.m4#L14
+              "--with-pcre-regex=/usr"
+            ]
+            ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.3") [
+              # Only PCRE 1 supported and no pkg-config.
+              "--with-pcre-regex=${prev.pcre.dev}"
+              "PCRE_LIBDIR=${prev.pcre}"
             ];
 
           buildInputs =
