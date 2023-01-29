@@ -2,41 +2,35 @@
   description = "Repository of Nix expressions for old PHP versions";
 
   inputs = {
-    # Shim to make flake.nix work with stable Nix.
-    flake-compat = {
-      url = "github:edolstra/flake-compat";
-      flake = false;
-    };
-
+    flake-compat.url = "github:nix-community/flake-compat";
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-
-    utils.url = "github:numtide/flake-utils";
+    systems.url = "github:nix-systems/default";
   };
 
-  outputs = { self, flake-compat, nixpkgs, utils }:
-    # For each supported platform,
-    utils.lib.eachDefaultSystem (system:
-      let
-        # Let’s merge the package set from Nixpkgs with our custom PHP versions.
-        pkgs = import nixpkgs.outPath {
-          config = {
-            allowUnfree = true;
-          };
-          inherit system;
-          overlays = [
-            self.overlays.default
-          ];
-        };
-      in rec {
-        packages = {
-          inherit (pkgs) php php56 php70 php71 php72 php73 php74 php80 php81 php82 php83;
-        };
+  outputs = inputs@{ self, flake-parts, nixpkgs, systems, ... }: flake-parts.lib.mkFlake { inherit inputs; } {
+    systems = import systems;
 
-        checks = import ./checks.nix {
-          inherit packages pkgs system;
-        };
-      }
-    ) // {
-      overlays.default = import ./pkgs/phps.nix nixpkgs.outPath;
+    perSystem = { self', inputs', config, pkgs, system, lib, ... }: {
+      _module.args.pkgs = import self.inputs.nixpkgs {
+        inherit system;
+        overlays = [
+          self.overlays.default
+        ];
+        config.allowUnfree = true;
+      };
+
+      packages = {
+        inherit (pkgs) php php56 php70 php71 php72 php73 php74 php80 php81 php82 php83;
+      };
+
+      checks = import ./checks.nix {
+        inherit (self') packages;
+        inherit pkgs system;
+      };
     };
+
+    flake = {
+      overlays.default = import ./pkgs/phps.nix nixpkgs;
+    };
+  };
 }
