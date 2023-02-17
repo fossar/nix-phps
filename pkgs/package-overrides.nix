@@ -317,6 +317,9 @@ in
           ./patches/zend_file_cache_config.patch
         ];
 
+      postPatch = if (lib.versionAtLeast prev.php.version "7.2" && pkgs.stdenv.isDarwin) then
+        attrs.postPatch else '''';
+
       doCheck = lib.versionAtLeast prev.php.version "7.4";
     });
 
