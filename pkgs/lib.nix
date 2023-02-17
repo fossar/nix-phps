@@ -6,7 +6,7 @@
 }:
 
 {
-  /** Remove given lines from a string.
+  /* Remove given lines from a string.
 
     Will fail loudly if any of the lines is not present.
 
