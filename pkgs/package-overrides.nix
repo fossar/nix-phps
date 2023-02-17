@@ -18,6 +18,8 @@ let
   '';
 
   inherit (pkgs) lib;
+
+  inherit (import ./lib.nix { inherit lib; }) removeLines;
 in
 
 {
@@ -318,6 +320,13 @@ in
         ];
 
       doCheck = lib.versionAtLeast prev.php.version "7.4";
+
+      postPatch =
+        removeLines
+          (lib.optionals (lib.versionOlder prev.php.version "7.2.20" && pkgs.stdenv.isDarwin) [
+            "rm ext/opcache/tests/bug78106.phpt"
+          ])
+          attrs.postPatch;
     });
 
     openssl = prev.extensions.openssl.overrideAttrs (attrs: {
