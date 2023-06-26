@@ -347,6 +347,7 @@ in
             ];
         in
         ourPatches ++ upstreamPatches;
+      buildInputs = if (lib.versionAtLeast prev.php.version "8.1") then [ pkgs.openssl ] else [ pkgs.openssl_1_1 ];
     });
 
     pdo = prev.extensions.pdo.overrideAttrs (attrs: {
