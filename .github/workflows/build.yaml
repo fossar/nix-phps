@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         php:
+          - branch: '8.3'
           - branch: '8.2'
           - branch: '8.1'
           - branch: '8.0'
@@ -46,6 +47,7 @@ jobs:
           major=${branch%%.*}
           minor=${branch#*.}
           attr=php$major$minor
+          echo "minor=$minor" >> $GITHUB_OUTPUT
           echo "major=$major" >> $GITHUB_OUTPUT
           echo "attr=$attr" >> $GITHUB_OUTPUT
 
@@ -67,6 +69,7 @@ jobs:
         run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-mysql
 
       - name: Build Xdebug extension
+        if: ${{ !(steps.params.outputs.major == 8 && steps.params.outputs.minor == 3) }}
         run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-xdebug
 
       - name: Build Tidy extension

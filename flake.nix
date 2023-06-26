@@ -29,7 +29,7 @@
         };
       in rec {
         packages = {
-          inherit (pkgs) php php56 php70 php71 php72 php73 php74 php80 php81 php82;
+          inherit (pkgs) php php56 php70 php71 php72 php73 php74 php80 php81 php82 php83;
         };
 
         checks = import ./checks.nix {
