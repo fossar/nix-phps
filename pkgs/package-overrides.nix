@@ -347,6 +347,18 @@ in
             ];
         in
         ourPatches ++ upstreamPatches;
+
+      buildInputs =
+        let
+          replaceOpenssl = pkg:
+            if pkg == pkgs.openssl && lib.versionOlder prev.php.version "8.1" then
+              pkgs.openssl_1_1.overrideAttrs (old: {
+                meta = builtins.removeAttrs old.meta [ "knownVulnerabilities" ];
+              })
+            else
+              pkg;
+        in
+        builtins.map replaceOpenssl attrs.buildInputs;
     });
 
     pdo = prev.extensions.pdo.overrideAttrs (attrs: {
@@ -460,6 +472,15 @@ in
             ];
         in
         ourPatches ++ upstreamPatches;
+    });
+
+    tokenizer = prev.extensions.tokenizer.overrideAttrs (attrs: {
+      patches = builtins.filter
+        (patch:
+          # The patch do not apply to PHP < 8.1
+          patchName patch == "fix-tokenizer-php81.patch" -> lib.versionAtLeast prev.php.version "8.1"
+        )
+        (attrs.patches or []);
     });
 
     wddx =
