@@ -145,4 +145,8 @@ in
   php82 = prev.php82.override {
     inherit packageOverrides;
   };
+
+  php83 = prev.php83.override {
+    inherit packageOverrides;
+  };
 }

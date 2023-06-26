@@ -25,6 +25,7 @@ The following versions are currently available:
 - `php80`
 - `php81`
 - `php82`
+- `php83`
 
 There is also a `php` package which is the alias of the default PHP version in Nixpkgs.
 
