@@ -124,10 +124,6 @@ let
   mkPhp = args: prev.callPackage generic (_mkArgs args);
 in
 {
-  openssl_1_1 = prev.openssl_1_1.overrideAttrs (old: {
-    meta = builtins.removeAttrs old.meta [ "knownVulnerabilities" ];
-  });
-
   php56 = import ./php/5.6.nix { inherit prev mkPhp; };
 
   php70 = import ./php/7.0.nix { inherit prev mkPhp; };

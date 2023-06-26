@@ -21,6 +21,9 @@
         pkgs = import nixpkgs.outPath {
           config = {
             allowUnfree = true;
+            permittedInsecurePackages = [
+              "openssl-1.1.1u"
+            ];
           };
           inherit system;
           overlays = [
