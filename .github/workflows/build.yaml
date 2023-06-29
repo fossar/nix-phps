@@ -54,6 +54,10 @@ jobs:
       - name: Build PHP
         run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-php
 
+      - name: List extensions
+        run: |
+          nix eval --json --impure --expr 'builtins.attrNames (import ./.).packages.x86_64-linux.${{ steps.params.outputs.attr }}.extensions'
+
       - name: Build Imagick extension
         run: nix-build -A outputs.checks.x86_64-linux.${{ steps.params.outputs.attr }}-imagick
 
