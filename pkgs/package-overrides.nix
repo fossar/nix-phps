@@ -56,9 +56,35 @@ in
       else
         prev.extensions.apcu;
 
+    ast =
+      if lib.versionOlder prev.php.version "7.2" then
+        prev.extensions.ast.overrideAttrs (attrs: {
+          name = "ast-1.0.16";
+          version = "1.0.16";
+          src = pkgs.fetchFromGitHub {
+            owner = "nikic";
+            repo = "php-ast";
+            rev = "v1.0.16";
+            hash = "sha256-PQLwKsVkNpa41jg+dZC/SO7tQ7bkywA9/LRsD5t6FlY=";
+          };
+        })
+      else
+        prev.extensions.ast;
+
+    blackfire =
+      if lib.versionAtLeast prev.php.version "80" then
+        prev.extensions.blackfire
+      else
+        throw "php.extensions.blackfire requires PHP version >= 8.0.";
+
     couchbase = prev.extensions.couchbase.overrideAttrs (attrs: {
       preConfigure =
-        attrs.preConfigure or "" + linkInternalDeps [ final.extensions.json ];
+        let
+          deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
+            final.extensions.json
+          ];
+        in
+        attrs.preConfigure or "" + linkInternalDeps deps;
     });
 
     dom = prev.extensions.dom.overrideAttrs (attrs: {
@@ -111,14 +137,19 @@ in
 
     ds = prev.extensions.ds.overrideAttrs (attrs: {
       preConfigure =
-        attrs.preConfigure or "" linkInternalDeps [ final.extensions.json ];
+        let
+          deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
+            final.extensions.json
+          ];
+        in
+        attrs.preConfigure or "" + linkInternalDeps deps;
     });
 
     ffi =
       if lib.versionAtLeast prev.php.version "7.4" then
         prev.extensions.ffi
       else
-        null;
+        throw "php.extensions.ffi requires PHP version >= 7.4.";
 
     gd =
       if lib.versionOlder prev.php.version "7.4" then
@@ -210,12 +241,12 @@ in
     });
 
     json =
-      if lib.versionOlder prev.php.version "8.0" then
+      if lib.versionAtLeast prev.php.version "8.0" then
+        throw "php.extensions.json is enabled by default in PHP >= 8.0."
+      else
         prev.mkExtension {
           name = "json";
-        }
-      else
-        null;
+        };
 
     memcached =
       if lib.versionOlder prev.php.version "7.0" then
@@ -239,7 +270,7 @@ in
           ];
         }
       else
-        null;
+        throw "php.extensions.mssql requires PHP version < 7.0.";
 
     mysql =
       if lib.versionOlder prev.php.version "7.0" then
@@ -256,7 +287,7 @@ in
           '';
         }
       else
-        null;
+        throw "php.extensions.mysql requires PHP version < 7.0.";
 
     mysqli =
       if lib.versionOlder prev.php.version "7.0" then
@@ -361,6 +392,11 @@ in
         builtins.map replaceOpenssl attrs.buildInputs;
     });
 
+    pcov = if lib.versionAtLeast prev.php.version "7.1" then
+        prev.extensions.pcov
+      else
+        throw "php.extensions.pcov requires PHP version >= 7.1.";
+
     pdo = prev.extensions.pdo.overrideAttrs (attrs: {
       patches =
         let
@@ -419,7 +455,12 @@ in
       else if lib.versionOlder prev.php.version "8.0" then
         prev.extensions.redis.overrideAttrs (attrs: {
           preConfigure =
-            attrs.preConfigure or "" + linkInternalDeps [ final.extensions.json ];
+            let
+              deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
+                final.extensions.json
+              ];
+            in
+            attrs.preConfigure or "" + linkInternalDeps deps;
         })
       else
         prev.extensions.redis;
@@ -435,7 +476,13 @@ in
           };
         })
       else
-        throw "php.extensions.redis3 requires PHP version < 8.0.";
+        throw "php.extensions.redis requires PHP version < 8.0.";
+
+    relay =
+      if lib.versionAtLeast prev.php.version "8.0" then
+        prev.extensions.relay
+      else
+        throw "php.extensions.relay requires PHP version >= 8.0.";
 
     simplexml = prev.extensions.simplexml.overrideAttrs (attrs: {
       configureFlags =
@@ -502,7 +549,7 @@ in
           ];
         }
       else
-        null;
+        throw "php.extensions.wddx requires PHP version < 7.4.";
 
     xdebug =
       # xdebug versions were determined using https://xdebug.org/docs/compat
@@ -579,7 +626,7 @@ in
           ];
         }
       else
-        null;
+        throw "php.extensions.xmlrpc is no longer available in PHP version >= 8.0.";
 
     xmlwriter = prev.extensions.xmlwriter.overrideAttrs (attrs: {
       configureFlags =
