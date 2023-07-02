@@ -72,7 +72,7 @@ in
         prev.extensions.ast;
 
     blackfire =
-      if lib.versionAtLeast prev.php.version "80" then
+      if lib.versionAtLeast prev.php.version "8.0" then
         prev.extensions.blackfire
       else
         throw "php.extensions.blackfire requires PHP version >= 8.0.";
