@@ -72,10 +72,14 @@ in
         prev.extensions.ast;
 
     blackfire =
-      if lib.versionAtLeast prev.php.version "8.0" then
+      if lib.versionAtLeast prev.php.version "8.3" then
+        throw "php.extensions.blackfire requires PHP version >= 5.6 and < 8.3"
+      else if lib.versionAtLeast prev.php.version "8.1" then
         prev.extensions.blackfire
+      else if lib.versionAtLeast prev.php.version "7.0" then
+        final.callPackage ./extensions/blackfire/1.88.1.nix { inherit prev; }
       else
-        throw "php.extensions.blackfire requires PHP version >= 8.0.";
+        final.callPackage ./extensions/blackfire/1.50.0.nix { inherit prev; };
 
     couchbase = prev.extensions.couchbase.overrideAttrs (attrs: {
       preConfigure =
