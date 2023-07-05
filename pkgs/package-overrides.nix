@@ -149,6 +149,21 @@ in
         attrs.preConfigure or "" + linkInternalDeps deps;
     });
 
+    enchant = let
+      enchant1 = pkgs.callPackage ./enchant/1.x.nix { };
+    in
+    prev.extensions.enchant.overrideAttrs (attrs: {
+      buildInputs = attrs.buildInputs or [] ++
+        lib.optionals (lib.versionOlder prev.php.version "8.0") [
+          enchant1
+        ];
+
+      configureFlags = attrs.configureFlags or [] ++
+        lib.optionals (lib.versionOlder prev.php.version "8.0") [
+          "--with-enchant=${lib.getDev enchant1}"
+        ];
+    });
+
     ffi =
       if lib.versionAtLeast prev.php.version "7.4" then
         prev.extensions.ffi
