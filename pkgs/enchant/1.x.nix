@@ -29,6 +29,14 @@ stdenv.mkDerivation (finalAttrs: {
     hspell
   ];
 
+  patches = [
+    # This patch prevent libtool to fail with the following error:
+    # > libtool: link: unable to infer tagged configuration
+    # > libtool:   error: specify a tag with '--tag'
+    # Report and fix from https://bugs.gentoo.org/630072
+    ./fix-libtool-build.patch
+  ];
+
   meta = {
     description = "Generic spell checking library";
     homepage = "https://abiword.github.io/enchant";
