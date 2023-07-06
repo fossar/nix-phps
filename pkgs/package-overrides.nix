@@ -91,6 +91,21 @@ in
         attrs.preConfigure or "" + linkInternalDeps deps;
     });
 
+    datadog_trace =
+      if lib.versionAtLeast prev.php.version "8.3" then
+        throw "php.extensions.datadog_trace requires PHP version >= 5.6 and < 8.3"
+      else if lib.versionOlder prev.php.version "7" then
+        prev.extensions.datadog_trace.overrideAttrs (attrs: {
+          name = "datadog_trace-0.75.0";
+          version = "0.75.0";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/datadog_trace-0.75.0.tgz";
+            hash = "sha256-xgymzG9QBhLO/sBaEAfAVwPDB8PswB5Yq6yqXbyvAvw=";
+          };
+        })
+      else
+        prev.extensions.datadog_trace;
+
     dom = prev.extensions.dom.overrideAttrs (attrs: {
       patches =
         let
