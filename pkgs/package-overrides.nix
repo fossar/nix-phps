@@ -512,6 +512,21 @@ in
         ];
       });
 
+    swoole =
+      if lib.versionAtLeast prev.php.version "8.0" then
+        prev.extensions.swoole
+      else if lib.versionAtLeast prev.php.version "7.2" then
+        prev.extensions.swoole.overrideAttrs (attrs: {
+          name = "swoole-4.8.13";
+          version = "4.8.13";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/swoole-4.8.13.tgz";
+            hash = "sha256-9Le4VsESsQWJheCx/KMg7BIRKZYHs2MHPemnCWKK0yo=";
+          };
+        })
+      else
+        throw "php.extensions.swoole requires PHP version >= 7.2.";
+
     soap = prev.extensions.soap.overrideAttrs (attrs: {
       configureFlags =
         attrs.configureFlags or []
