@@ -274,6 +274,12 @@ in
         ourPatches ++ upstreamPatches;
     });
 
+    inotify =
+      if pkgs.stdenv.isDarwin then
+        throw "php.extensions.inotify is not supported on Darwin, only on Linux."
+      else
+        prev.extensions.inotify;
+
     json =
       if lib.versionAtLeast prev.php.version "8.0" then
         throw "php.extensions.json is enabled by default in PHP >= 8.0."
