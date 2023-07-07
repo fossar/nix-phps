@@ -154,15 +154,19 @@ in
         ];
     });
 
-    ds = prev.extensions.ds.overrideAttrs (attrs: {
-      preConfigure =
-        let
-          deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
-            final.extensions.json
-          ];
-        in
-        attrs.preConfigure or "" + linkInternalDeps deps;
-    });
+    ds =
+      if lib.versionOlder prev.php.version "7.0" then
+        throw "php.extensions.ds requires PHP version >= 7.0"
+      else
+        prev.extensions.ds.overrideAttrs (attrs: {
+          preConfigure =
+            let
+              deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
+                final.extensions.json
+              ];
+            in
+            attrs.preConfigure or "" + linkInternalDeps deps;
+        });
 
     enchant = let
       enchant1 = pkgs.callPackage ./enchant/1.x.nix { };
