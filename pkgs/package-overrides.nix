@@ -286,6 +286,29 @@ in
           name = "json";
         };
 
+    mailparse =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.extensions.mailparse.overrideAttrs (attrs: {
+          name = "mailparse-2.1.6";
+          version = "2.1.6";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/mailparse-2.1.6.tgz";
+            hash = "sha256-c3BRl9Ky7ngu+lR36yohQy9ZLCywWnLDoDe7454Ctcw=";
+          };
+        })
+      else if lib.versionOlder prev.php.version "7.3" then
+        prev.extensions.mailparse.overrideAttrs (attrs: {
+          name = "mailparse-3.1.3";
+          version = "3.1.3";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/mailparse-3.1.3.tgz";
+            hash = "sha256-hlnKYtyaTX0V8H+XoOIULLWCUcjncs02Zp7HQNIpJHE=";
+          };
+        })
+      else
+        prev.extensions.mailparse;
+
+
     memcached =
       if lib.versionOlder prev.php.version "7.0" then
         prev.extensions.memcached.overrideAttrs (attrs: {
