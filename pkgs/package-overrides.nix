@@ -299,6 +299,19 @@ in
       else
         prev.extensions.memcached;
 
+    mongodb =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.extensions.mongodb.overrideAttrs (attrs: {
+          name = "mongodb-1.7.5";
+          version = "1.7.5";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/mongodb-1.7.5.tgz";
+            hash = "sha256-5IoHYYwK6L5igpmZG19IGGHIkaIlRKI2WmM2HMGBw3k=";
+          };
+        })
+      else
+        prev.extensions.mongodb;
+
     mssql =
       if lib.versionOlder prev.php.version "7.0" then
         prev.mkExtension {
