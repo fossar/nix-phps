@@ -232,6 +232,19 @@ in
         ];
     });
 
+    igbinary =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.extensions.igbinary.overrideAttrs (attrs: {
+          name = "igbinary-2.0.8";
+          version = "2.0.8";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/igbinary-2.0.8.tgz";
+            hash = "sha256-usurEXLgc7GFfcB6SGv9rKbWD77WeM4PSzfNAY71toA=";
+          };
+        })
+      else
+        prev.extensions.igbinary;
+
     intl = prev.extensions.intl.overrideAttrs (attrs: {
       doCheck = if lib.versionOlder prev.php.version "7.2" then false else attrs.doCheck or true;
       patches =
