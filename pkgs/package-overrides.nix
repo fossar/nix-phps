@@ -232,6 +232,19 @@ in
         ];
     });
 
+    grpc =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.extensions.grpc.overrideAttrs (attrs: {
+          name = "grpc-1.33.1";
+          version = "1.33.1";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/grpc-1.33.1.tgz";
+            hash = "sha256-qibrH7DWYhb3CRBdJgWopysgQHB20em7C9fLF6J3WCw=";
+          };
+        })
+      else
+        prev.extensions.grpc;
+
     igbinary =
       if lib.versionOlder prev.php.version "7.0" then
         prev.extensions.igbinary.overrideAttrs (attrs: {
