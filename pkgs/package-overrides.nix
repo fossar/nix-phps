@@ -350,6 +350,24 @@ in
             hash = "sha256-5IoHYYwK6L5igpmZG19IGGHIkaIlRKI2WmM2HMGBw3k=";
           };
         })
+      else if lib.versionOlder prev.php.version "7.1" then
+        prev.extensions.mongodb.overrideAttrs (attrs: {
+          name = "mongodb-1.9.2";
+          version = "1.9.2";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/mongodb-1.9.2.tgz";
+            hash = "sha256-legyxdSK5ulHvcefNan48LvVGPSqAPHO9snq+64CGH0=";
+          };
+        })
+      else if lib.versionOlder prev.php.version "7.2" then
+        prev.extensions.mongodb.overrideAttrs (attrs: {
+          name = "mongodb-1.11.1";
+          version = "1.11.1";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/mongodb-1.11.1.tgz";
+            hash = "sha256-g4pQUN5Q1R+VkCa9jOxzSdivNwWMD+BylaC8lgqC1+8=";
+          };
+        })
       else
         prev.extensions.mongodb;
 
