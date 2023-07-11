@@ -308,6 +308,11 @@ in
       else
         prev.extensions.mailparse;
 
+    maxminddb =
+      if lib.versionOlder prev.php.version "7.2" then
+        throw "php.extensions.maxminddb requires PHP >= 7.2."
+      else
+        prev.extensions.maxminddb;
 
     memcached =
       if lib.versionOlder prev.php.version "7.0" then
