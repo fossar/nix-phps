@@ -515,6 +515,21 @@ in
         builtins.map replaceOpenssl attrs.buildInputs;
     });
 
+    openswoole =
+      if lib.versionOlder prev.php.version "7.2" then
+        throw "php.extensions.openswoole requires PHP version >= 7.2."
+      else if lib.versionOlder prev.php.version "7.4" then
+        prev.extensions.openswoole.overrideAttrs (attrs: {
+          name = "openswoole-4.10.0";
+          version = "4.10.0";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/openswoole-4.10.0.tgz";
+            hash = "sha256-FSJUcL3gJaaq4ruUK6AbKeUYVvkBj4gJPZkvTrG6Dm8=";
+          };
+        })
+      else
+        prev.extensions.openswoole;
+
     pcov = if lib.versionAtLeast prev.php.version "7.1" then
         prev.extensions.pcov
       else
