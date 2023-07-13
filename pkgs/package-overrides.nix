@@ -244,6 +244,19 @@ in
       else
         prev.extensions.igbinary;
 
+    inotify =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.extensions.inotify.overrideAttrs (attrs: {
+          name = "inotify-0.1.6";
+          version = "0.1.6";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/inotify-0.1.6.tgz";
+            hash = "sha256-l5+Aol1OsN4oJhf/wN9G8HNGqDg/MQublD5ImS5bSU4=";
+          };
+        })
+      else
+        prev.extensions.inotify;
+
     intl = prev.extensions.intl.overrideAttrs (attrs: {
       doCheck = if lib.versionOlder prev.php.version "7.2" then false else attrs.doCheck or true;
       patches =
