@@ -383,6 +383,12 @@ in
       else
         prev.extensions.mongodb;
 
+    msgpack =
+      if lib.versionOlder prev.php.version "7.0" then
+        throw "php.extensions.msgpack requires PHP version >= 7.0"
+      else
+        prev.extensions.msgpack;
+
     mssql =
       if lib.versionOlder prev.php.version "7.0" then
         prev.mkExtension {
