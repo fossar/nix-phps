@@ -540,6 +540,11 @@ in
       else
         throw "php.extensions.pcov requires PHP version >= 7.1.";
 
+    pdlib = if lib.versionOlder prev.php.version "7.0" then
+        throw "php.extensions.pdlib requires PHP version >= 7.1."
+      else
+        prev.extensions.pdlib;
+
     pdo = prev.extensions.pdo.overrideAttrs (attrs: {
       patches =
         let
