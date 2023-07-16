@@ -396,6 +396,10 @@ in
           configureFlags = [
             "--with-mssql=${pkgs.freetds}"
           ];
+          patches = [
+            # Make sure it looks also for the proper extension files
+            ./patches/0001-mssql-extension-fix-builds-on-darwin.patch
+          ];
         }
       else
         throw "php.extensions.mssql requires PHP version < 7.0.";
