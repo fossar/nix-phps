@@ -1,0 +1,28 @@
+From 481698135c339d916a78381eceeaa4b755ad5da5 Mon Sep 17 00:00:00 2001
+From: Pol Dellaiera <pol.dellaiera@protonmail.com>
+Date: Sun, 23 Jul 2023 21:44:13 +0200
+Subject: [PATCH] mssql extension: fix builds on darwin
+
+Detect proper file extensions by using `$SHLIB_SUFFIX_NAME`
+---
+ ext/mssql/config.m4 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ext/mssql/config.m4 b/ext/mssql/config.m4
+index 2a298af734..4014312594 100644
+--- a/ext/mssql/config.m4
++++ b/ext/mssql/config.m4
+@@ -38,8 +38,8 @@ if test "$PHP_MSSQL" != "no"; then
+     fi
+   fi  
+ 
+-  if test ! -r "$FREETDS_INSTALLATION_DIR/$PHP_LIBDIR/libsybdb.a" && test ! -r "$FREETDS_INSTALLATION_DIR/$PHP_LIBDIR/libsybdb.so"; then
+-     AC_MSG_ERROR(Could not find $FREETDS_INSTALLATION_DIR/$PHP_LIBDIR/libsybdb.[a|so])
++  if test ! -r "$FREETDS_INSTALLATION_DIR/$PHP_LIBDIR/libsybdb.a" && test ! -r "$FREETDS_INSTALLATION_DIR/$PHP_LIBDIR/libsybdb.$SHLIB_SUFFIX_NAME"; then
++     AC_MSG_ERROR(Could not find $FREETDS_INSTALLATION_DIR/$PHP_LIBDIR/libsybdb.[a|$SHLIB_SUFFIX_NAME])
+   fi
+ 
+   PHP_ADD_INCLUDE($FREETDS_INCLUDE_DIR)
+-- 
+2.41.0
+
