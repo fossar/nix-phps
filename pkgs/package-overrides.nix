@@ -620,7 +620,10 @@ in
           version = "3.1.6";
           src = pkgs.fetchurl {
             url = "http://pecl.php.net/get/redis-3.1.6.tgz";
-            sha256 = "siknTNwUwi78Qf76ANtNxbsyqZfWgRJ4ZioEOnaqJgA=";
+            hash = "sha256-siknTNwUwi78Qf76ANtNxbsyqZfWgRJ4ZioEOnaqJgA=";
+          };
+          meta = attrs.meta // {
+            platforms = lib.platforms.linux;
           };
         })
       else
