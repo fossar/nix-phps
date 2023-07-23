@@ -682,6 +682,20 @@ in
         ];
       });
 
+    snmp = prev.extensions.snmp.overrideAttrs (attrs: {
+      buildInputs =
+        let
+          replaceOpenssl = pkg:
+            if pkg == pkgs.openssl && lib.versionOlder prev.php.version "8.1" then
+              pkgs.openssl_1_1.overrideAttrs (old: {
+                meta = builtins.removeAttrs old.meta [ "knownVulnerabilities" ];
+              })
+            else
+              pkg;
+        in
+        builtins.map replaceOpenssl attrs.buildInputs;
+    });
+
     swoole =
       if lib.versionAtLeast prev.php.version "8.0" then
         prev.extensions.swoole
