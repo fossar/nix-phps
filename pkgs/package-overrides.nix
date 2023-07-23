@@ -510,7 +510,7 @@ in
       buildInputs =
         let
           replaceOpenssl = pkg:
-            if pkg == pkgs.openssl && lib.versionOlder prev.php.version "8.1" then
+            if pkg.pname == "openssl" && lib.versionOlder prev.php.version "8.1" then
               pkgs.openssl_1_1.overrideAttrs (old: {
                 meta = builtins.removeAttrs old.meta [ "knownVulnerabilities" ];
               })
