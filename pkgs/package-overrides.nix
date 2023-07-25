@@ -144,6 +144,12 @@ in
             # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
             rm ext/dom/tests/bug43364.phpt
           '')
+
+          (lib.optionalString (lib.versionOlder prev.php.version "8.1" && lib.versionAtLeast prev.php.version "7.1") ''
+            # Removing tests failing with libxml2 (2.11.4) > 2.10.4
+            rm ext/dom/tests/DOMDocument_loadXML_error2.phpt
+            rm ext/dom/tests/DOMDocument_load_error2.phpt
+          '')
         ];
     });
 
