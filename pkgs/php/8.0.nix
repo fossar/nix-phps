@@ -34,66 +34,58 @@ let
     { version = "8.0.29"; rev = "php-8.0.29"; hash = "sha256-SAGh8OFxcChnI6tUrNBFrHipZWAh1W8QSmRUPuySLhI="; }
     { version = "8.0.30"; rev = "php-8.0.30"; hash = "sha256-mKnLag4nppUM30sm3KxI8r4tk21SJKUC8GbPPUzxm5I="; }
   ];
+
+  phps = builtins.foldl'
+    (acc: item: acc // {
+      "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = (mkPhp { version = item.version; hash = item.hash; }).withExtensions
+        (
+          { all, ... }: with all; [
+            bcmath
+            calendar
+            curl
+            ctype
+            dom
+            exif
+            fileinfo
+            filter
+            ftp
+            gd
+            gettext
+            gmp
+            iconv
+            imap
+            intl
+            ldap
+            mbstring
+            mysqli
+            mysqlnd
+            opcache
+            openssl
+            pcntl
+            pdo
+            pdo_mysql
+            pdo_odbc
+            pdo_pgsql
+            pdo_sqlite
+            pgsql
+            posix
+            readline
+            session
+            simplexml
+            sockets
+            soap
+            sodium
+            sysvsem
+            sqlite3
+            tokenizer
+            xmlreader
+            xmlwriter
+            zip
+            zlib
+          ]
+        );
+    })
+    { }
+    archives;
 in
-builtins.foldl'
-  (acc: item: acc // {
-    "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = (mkPhp { version = item.version; hash = item.hash; }).withExtensions
-      (
-        { all, ... }: with all; [
-          bcmath
-          calendar
-          curl
-          ctype
-          dom
-          exif
-          fileinfo
-          filter
-          ftp
-          gd
-          gettext
-          gmp
-          iconv
-          imap
-          intl
-          ldap
-          mbstring
-          mysqli
-          mysqlnd
-          opcache
-          openssl
-          pcntl
-          pdo
-          pdo_mysql
-          pdo_odbc
-          pdo_pgsql
-          pdo_sqlite
-          pgsql
-          posix
-          readline
-          session
-          simplexml
-          sockets
-          soap
-          sodium
-          sysvsem
-          sqlite3
-          tokenizer
-          xmlreader
-          xmlwriter
-          zip
-          zlib
-        ]
-      );
-  })
-  { }
-  (
-    archives ++ [
-      (
-        let last = (prev.lib.last archives); in {
-          version = prev.lib.versions.majorMinor last.version;
-          rev = last.rev;
-          hash = last.hash;
-        }
-      )
-    ]
-  )
+phps // (let last = (phps."php${builtins.replaceStrings [ "." "-" ] [ "" "" ] (prev.lib.last archives).version}"); in { "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] (prev.lib.versions.majorMinor last.version)}" = last; })

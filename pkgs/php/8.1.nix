@@ -27,20 +27,12 @@ let
     { version = "8.1.22"; rev = "php-8.1.22"; hash = ""; }
     { version = "8.1.23"; rev = "php-8.1.23"; hash = ""; }
   ];
+
+  phps = builtins.foldl'
+    (acc: item: acc // {
+      "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = prev.php81.override { inherit packageOverrides; version = item.version; hash = item.hash; };
+    })
+    { }
+    archives;
 in
-builtins.foldl'
-  (acc: item: acc // {
-    "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = prev.php81.override { inherit packageOverrides; version = item.version; hash = item.hash; };
-  })
-  { }
-  (
-    archives ++ [
-      (
-        let last = (prev.lib.last archives); in {
-          version = prev.lib.versions.majorMinor last.version;
-          rev = last.rev;
-          hash = last.hash;
-        }
-      )
-    ]
-  )
+phps // (let last = (phps."php${builtins.replaceStrings [ "." "-" ] [ "" "" ] (prev.lib.last archives).version}"); in { "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] (prev.lib.versions.majorMinor last.version)}" = last; })
