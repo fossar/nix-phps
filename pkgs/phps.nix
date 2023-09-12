@@ -122,31 +122,28 @@ let
 
   generic = "${nixpkgs}/pkgs/development/interpreters/php/generic.nix";
   mkPhp = args: prev.callPackage generic (_mkArgs args);
+
+  php56 = import ./php/5.6.nix { inherit prev mkPhp packageOverrides; };
+
+  php70 = import ./php/7.0.nix { inherit prev mkPhp packageOverrides; };
+
+  php71 = import ./php/7.1.nix { inherit prev mkPhp packageOverrides; };
+
+  php72 = import ./php/7.2.nix { inherit prev mkPhp packageOverrides; };
+
+  php73 = import ./php/7.3.nix { inherit prev mkPhp packageOverrides; };
+
+  php74 = import ./php/7.4.nix { inherit prev mkPhp packageOverrides; };
+
+  php80 = import ./php/8.0.nix { inherit prev mkPhp packageOverrides; };
+
+  php81 = import ./php/8.1.nix { inherit prev mkPhp packageOverrides; };
+
+  php82 = import ./php/8.2.nix { inherit prev mkPhp packageOverrides; };
+
+  # TODO
+  # php83 = import ./php/8.3.nix { inherit prev mkPhp packageOverrides; };
 in
 {
-  php56 = import ./php/5.6.nix { inherit prev mkPhp; };
-
-  php70 = import ./php/7.0.nix { inherit prev mkPhp; };
-
-  php71 = import ./php/7.1.nix { inherit prev mkPhp; };
-
-  php72 = import ./php/7.2.nix { inherit prev mkPhp; };
-
-  php73 = import ./php/7.3.nix { inherit prev mkPhp; };
-
-  php74 = import ./php/7.4.nix { inherit prev mkPhp; };
-
-  php80 = import ./php/8.0.nix { inherit prev mkPhp; };
-
-  php81 = prev.php81.override {
-    inherit packageOverrides;
-  };
-
-  php82 = prev.php82.override {
-    inherit packageOverrides;
-  };
-
-  php83 = prev.php83.override {
-    inherit packageOverrides;
-  };
+  phps = php56 // php70 // php71 // php72 // php73 // php74 // php80 // php81 // php82;
 }
