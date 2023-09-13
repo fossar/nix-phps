@@ -141,9 +141,8 @@ let
 
   php82 = import ./php/8.2.nix { inherit prev mkPhp packageOverrides; };
 
-  # TODO
-  # php83 = import ./php/8.3.nix { inherit prev mkPhp packageOverrides; };
+  php83 = import ./php/8.3.nix { inherit prev mkPhp packageOverrides; };
 in
 {
-  phps = php56 // php70 // php71 // php72 // php73 // php74 // php80 // php81 // php82;
+  phps = php56 // php70 // php71 // php72 // php73 // php74 // php80 // php81 // php82 // php83;
 }
