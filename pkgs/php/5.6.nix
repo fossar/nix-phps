@@ -47,7 +47,7 @@ let
 
   phps = builtins.foldl'
     (acc: item: acc // {
-      "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = (mkPhp { version = item.version; hash = item.hash; }).withExtensions
+      "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = (mkPhp item).withExtensions
         (
           { all, ... }: with all; [
             bcmath
