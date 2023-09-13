@@ -7,7 +7,7 @@ let
 
   phps = builtins.foldl'
     (acc: item: acc // {
-      "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = prev.php83.override item;
+      "php${builtins.replaceStrings [ "." "-" ] [ "" "" ] item.version}" = prev.php83.override { inherit packageOverrides; phpAttrsOverrides = attrs: (builtins.removeAttrs item ["packageOverrides"]); };
     })
     { }
     archives;
