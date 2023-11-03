@@ -39,7 +39,7 @@ let
               # https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d
               (prev.pkgs.fetchpatch2 {
                 url = "https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d.patch";
-                sha256 = "sha256-x0vEcoXNFeQi3re1TrK/Np9AH5dy3wf95xM08xCyGE0=";
+                sha256 = "sha256-Th1ZhC8t84MACxosoYud1LGDd5DtYe36Ctk1Ocjcu1s=";
                 includes = [
                   "build/libtool.m4"
                 ];
