@@ -29,17 +29,17 @@ let
             ++ prev.lib.optionals (prev.lib.versions.majorMinor args.version == "7.2") [
               # Building the bundled intl extension fails on Mac OS.
               # See https://bugs.php.net/bug.php?id=76826 for more information.
-              (prev.pkgs.fetchpatch {
+              (prev.pkgs.fetchurl {
                 url = "https://bugs.php.net/patch-display.php?bug_id=76826&patch=bug76826.poc.0.patch&revision=1538723399&download=1";
-                sha256 = "aW+MW9Kb8N/yBO7MdqZMZzgMSF7b+IMLulJKgKPWrUA=";
+                hash = "sha256-6JoyxVir3AG3VC6Q0uKrfb/ZFjs9/db+uZg3ssBdqzw=";
               })
             ]
             ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
               # Handle macos versions that don't start with 10.* in libtool.
               # https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d
-              (prev.pkgs.fetchpatch2 {
+              (prev.pkgs.fetchpatch {
                 url = "https://github.com/php/php-src/commit/d016434ad33284dfaceb8d233351d34356566d7d.patch";
-                sha256 = "sha256-Th1ZhC8t84MACxosoYud1LGDd5DtYe36Ctk1Ocjcu1s=";
+                hash = "sha256-VQfd1sKYX9kzulvnr5CJ0FNl/6Y4mObyzT3GBs4Mq10=";
                 includes = [
                   "build/libtool.m4"
                 ];
