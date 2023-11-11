@@ -1,4 +1,7 @@
-nixpkgs:
+{
+  nixpkgs,
+  php-src,
+}:
 
 # These are older versions of PHP removed from Nixpkgs.
 
@@ -8,10 +11,14 @@ prev:
 let
   packageOverrides = import ./package-overrides.nix prev;
 
+  /* Composes package overrides (i.e. overlays that only take prev). */
+  composeOverrides = a: b: prev.lib.composeExtensions (_: a) (_: b) { };
+
   _mkArgs =
     args:
 
-    {
+    args
+    // {
       inherit packageOverrides;
 
       # For passing pcre2 to generic.nix.
@@ -20,8 +27,14 @@ let
         then prev.pcre2
         else prev.pcre;
 
+      # Overrides attributes passed to the stdenv.mkDerivation for the unwrapped PHP
+      # in <nixpkgs/pkgs/development/interpreters/php/generic.nix>.
+      # This will essentially end up creating a derivation equivalent to the following:
+      # stdenv.mkDerivation (versionSpecificOverrides (commonOverrides { /* stuff passed to mkDerivation in generic.nix */ }))
       phpAttrsOverrides =
-        attrs:
+        let
+          commonOverrides =
+            attrs:
 
         {
           patches =
@@ -46,14 +59,13 @@ let
               })
             ];
 
-          configureFlags =
-            attrs.configureFlags
-            ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
-              # phar extension’s build system expects hash or it will degrade.
-              "--enable-hash"
-
-              "--enable-libxml"
-              "--with-libxml-dir=${prev.libxml2.dev}"
+              configureFlags =
+                attrs.configureFlags
+                ++ prev.lib.optionals (prev.lib.versionOlder args.version "7.4") [
+                  # phar extension’s build system expects hash or it will degrade.
+                  "--enable-hash"
+                  "--enable-libxml"
+                  "--with-libxml-dir=${prev.libxml2.dev}"
             ]
             ++ prev.lib.optionals (prev.lib.versions.majorMinor args.version == "7.3") [
               # Force use of pkg-config.
@@ -72,20 +84,24 @@ let
               prev.libxcrypt
             ];
 
-          preConfigure =
-            prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") ''
-              # Workaround “configure: error: Your system does not support systemd.”
-              # caused by PHP build system expecting PKG_CONFIG variable to contain
-              # an absolute path on PHP ≤ 7.4.
-              # Also patches acinclude.m4, which ends up being used by extensions.
-              # https://github.com/NixOS/nixpkgs/pull/90249
-              for i in $(find . -type f -name "*.m4"); do
-                substituteInPlace $i \
-                  --replace 'test -x "$PKG_CONFIG"' 'type -P "$PKG_CONFIG" >/dev/null'
-              done
-            ''
-            + attrs.preConfigure;
-        };
+              preConfigure =
+                prev.lib.optionalString (prev.lib.versionOlder args.version "7.4") ''
+                  # Workaround “configure: error: Your system does not support systemd.”
+                  # caused by PHP build system expecting PKG_CONFIG variable to contain
+                  # an absolute path on PHP ≤ 7.4.
+                  # Also patches acinclude.m4, which ends up being used by extensions.
+                  # https://github.com/NixOS/nixpkgs/pull/90249
+                  for i in $(find . -type f -name "*.m4"); do
+                    substituteInPlace $i \
+                      --replace 'test -x "$PKG_CONFIG"' 'type -P "$PKG_CONFIG" >/dev/null'
+                  done
+                ''
+                + attrs.preConfigure;
+            };
+
+          versionSpecificOverrides = args.phpAttrsOverrides or (attrs: { });
+        in
+        composeOverrides commonOverrides versionSpecificOverrides;
 
       # For passing pcre2 to php-packages.nix.
       callPackage =
@@ -117,8 +133,7 @@ let
                 );
             }
           );
-    }
-    // args;
+    };
 
   generic = "${nixpkgs}/pkgs/development/interpreters/php/generic.nix";
   mkPhp = args: prev.callPackage generic (_mkArgs args);
@@ -149,4 +164,6 @@ in
   php83 = prev.php83.override {
     inherit packageOverrides;
   };
+
+  php-master = import ./php/master.nix { inherit prev generic _mkArgs php-src; };
 }

@@ -729,7 +729,16 @@ in
 
     xdebug =
       # xdebug versions were determined using https://xdebug.org/docs/compat
-      if lib.versionAtLeast prev.php.version "8.0" then
+      if lib.versionAtLeast prev.php.version "8.3" then
+        prev.extensions.xdebug.overrideAttrs (attrs: {
+          name = "xdebug-3.3.0alpha2";
+          version = "3.3.0alpha2";
+          src = pkgs.fetchurl {
+            url = "http://pecl.php.net/get/xdebug-3.3.0alpha2.tgz";
+            hash = "sha256-wcV71/taOpqs2ckX4vZT1TOWpl1JiP2s6EgPyX9EI6c=";
+          };
+        })
+      else if lib.versionAtLeast prev.php.version "8.0" then
         prev.extensions.xdebug
       else if lib.versionAtLeast prev.php.version "7.2" then
         prev.extensions.xdebug.overrideAttrs (attrs: {
