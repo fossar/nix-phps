@@ -92,31 +92,31 @@ let
         cpFn:
         cpArgs:
 
-        prev.callPackage
-          cpFn
-          (
-            cpArgs
-            // {
-              pcre2 =
-                if prev.lib.versionAtLeast args.version "7.3"
-                then prev.pcre2
-                else prev.pcre;
+        (prev.callPackage cpFn cpArgs).override (
+          prevArgs:
 
-              # For passing pcre2 to stuff called with callPackage in php-packages.nix.
-              pkgs =
-                prev
-                // (
-                  prev.lib.makeScope
-                    prev.newScope
-                    (self: {
-                      pcre2 =
-                        if prev.lib.versionAtLeast args.version "7.3"
-                        then prev.pcre2
-                        else prev.pcre;
-                    })
-                );
-            }
-          );
+          # Only pass these attributes if the package function actually expects them.
+          prev.lib.filterAttrs (key: _v: builtins.hasAttr key prevArgs) {
+            pcre2 =
+              if prev.lib.versionAtLeast args.version "7.3"
+              then prev.pcre2
+              else prev.pcre;
+
+            # For passing pcre2 to stuff called with callPackage in php-packages.nix.
+            pkgs =
+              prev
+              // (
+                prev.lib.makeScope
+                  prev.newScope
+                  (self: {
+                    pcre2 =
+                      if prev.lib.versionAtLeast args.version "7.3"
+                      then prev.pcre2
+                      else prev.pcre;
+                  })
+              );
+          }
+      );
     }
     // args;
 
