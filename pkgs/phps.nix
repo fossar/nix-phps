@@ -85,7 +85,7 @@ let
               done
             ''
             + attrs.preConfigure;
-        } // prev.lib.optionalAttrs (final.stdenv.cc.isClang) {
+        } // prev.lib.optionalAttrs (prev.stdenv.cc.isClang) {
           # Downgrade the following errors to warnings. `-Wint-conversion` only affects PHP 7.3.
           NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "")
             + prev.lib.optionalString (prev.lib.versionOlder args.version "8.0") " -Wno-implicit-int -Wno-implicit-function-declaration"
