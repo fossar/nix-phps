@@ -85,6 +85,11 @@ let
               done
             ''
             + attrs.preConfigure;
+        } // prev.lib.optionalAttrs (final.stdenv.cc.isClang) {
+          # Downgrade the following errors to warnings. `-Wint-conversion` only affects PHP 7.3.
+          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "")
+            + prev.lib.optionalString (prev.lib.versionOlder args.version "8.0") " -Wno-implicit-int -Wno-implicit-function-declaration"
+            + prev.lib.optionalString (prev.lib.versionAtLeast args.version "7.3" && prev.lib.versionOlder args.version "7.4") " -Wno-int-conversion";
         };
 
       # For passing pcre2 to php-packages.nix.
