@@ -151,6 +151,8 @@ in
             rm ext/dom/tests/DOMDocument_load_error2.phpt
           '')
         ];
+    } // lib.optionalAttrs (lib.versionOlder prev.php.version "7.1" && pkgs.stdenv.cc.isClang) {
+      NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-incompatible-function-pointer-types";
     });
 
     ds =
@@ -181,6 +183,14 @@ in
           "--with-enchant=${lib.getDev enchant1}"
         ];
     });
+
+    fileinfo =
+      if lib.versionOlder prev.php.version "7.2" && pkgs.stdenv.cc.isClang then
+        prev.extensions.fileinfo.overrideAttrs (attrs: {
+          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-implicit-int";
+        })
+      else
+        prev.extensions.fileinfo;
 
     ffi =
       if lib.versionAtLeast prev.php.version "7.4" then
@@ -292,6 +302,8 @@ in
             ];
         in
         ourPatches ++ upstreamPatches;
+    } // lib.optionalAttrs (lib.versionOlder prev.php.version "7.1" && pkgs.stdenv.cc.isClang) {
+      NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-register";
     });
 
     iconv = prev.extensions.iconv.overrideAttrs (attrs: {
@@ -308,6 +320,18 @@ in
         in
         ourPatches ++ upstreamPatches;
     });
+
+    imap =
+      if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
+        prev.extensions.imap.overrideAttrs (attrs: {
+          patches = (attrs.patches or [ ]) ++ [
+            (pkgs.fetchpatch {
+              url = "https://github.com/php/php-src/commit/f9cbeaa0338520f6c4a4b17555f558634b0dd955.patch";
+              hash = "sha256-Gzxsh99e0HIrDz6r+9XWUw1BQLKWuRm8RQq9p0KxBVs=";
+            })
+          ];
+        })
+      else prev.extensions.imap;
 
     json =
       if lib.versionAtLeast prev.php.version "8.0" then
@@ -344,6 +368,14 @@ in
         throw "php.extensions.maxminddb requires PHP >= 7.2."
       else
         prev.extensions.maxminddb;
+
+    mbstring =
+      if lib.versionOlder prev.php.version "7.0" && pkgs.stdenv.cc.isClang then
+        prev.extensions.mbstring.overrideAttrs (attrs: {
+          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-implicit-function-declaration";
+        })
+      else
+        prev.extensions.mbstring;
 
     memcached =
       if lib.versionOlder prev.php.version "7.0" then
@@ -582,6 +614,30 @@ in
       else
         prev.extensions.pdo_mysql;
 
+    pdo_odbc =
+      if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
+        prev.extensions.pdo_odbc.overrideAttrs (attrs: {
+          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-incompatible-function-pointer-types";
+        })
+      else
+        prev.extensions.pdo_odbc;
+
+    pdo_pgsql =
+      if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
+        prev.extensions.pdo_pgsql.overrideAttrs (attrs: {
+          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-incompatible-function-pointer-types";
+        })
+      else
+        prev.extensions.pdo_pgsql;
+
+    pdo_sqlite =
+      if lib.versionOlder prev.php.version "7.4" && pkgs.stdenv.cc.isClang then
+        prev.extensions.pdo_sqlite.overrideAttrs (attrs: {
+          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-incompatible-function-pointer-types";
+        })
+      else
+        prev.extensions.pdo_sqlite;
+
     readline = prev.extensions.readline.overrideAttrs (attrs: {
       patches =
         let
@@ -619,6 +675,8 @@ in
               ];
             in
             attrs.preConfigure or "" + linkInternalDeps deps;
+        } // lib.optionalAttrs (lib.versionOlder prev.php.version "7.2" && pkgs.stdenv.cc.isClang) {
+          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-implicit-function-declaration -Wno-int-conversion";
         })
       else
         prev.extensions.redis;
@@ -839,6 +897,8 @@ in
           ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
             "--with-zlib-dir=${pkgs.zlib.dev}"
           ];
+    } // lib.optionalAttrs (lib.versionOlder prev.php.version "7.0" && pkgs.stdenv.cc.isClang) {
+      NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-incompatible-function-pointer-types";
     });
   };
 }
