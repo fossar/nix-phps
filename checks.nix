@@ -45,6 +45,11 @@ let
       drv = { php, ... }: php.extensions.tidy;
     };
 
+    couchbase = {
+      description = "Build Couchbase extension";
+      drv = { php, ... }: php.extensions.couchbase;
+    };
+
     composer-phar = {
       description = "Check that composer PHAR works";
       drv =

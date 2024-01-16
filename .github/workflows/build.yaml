@@ -63,6 +63,9 @@ jobs:
         run: |
           nix eval --json --impure --expr 'builtins.attrNames (import ./.).packages.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}.extensions'
 
+      - name: Build Couchbase extension
+        run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-couchbase
+
       - name: Build Imagick extension
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-imagick
 
