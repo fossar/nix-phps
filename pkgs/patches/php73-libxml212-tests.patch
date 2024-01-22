@@ -1,0 +1,200 @@
+diff --git c/ext/dom/tests/DOMDocument_loadXML_error1.phpt i/ext/dom/tests/DOMDocument_loadXML_error1.phpt
+index 41dd169506..ca0ae01249 100644
+--- c/ext/dom/tests/DOMDocument_loadXML_error1.phpt
++++ i/ext/dom/tests/DOMDocument_loadXML_error1.phpt
+@@ -12,6 +12,9 @@ Antonio Diaz Ruiz <dejalatele@gmail.com>
+ assert.bail=true
+ --SKIPIF--
+ <?php include('skipif.inc'); ?>
++<?php
++if (LIBXML_VERSION >= 21200) die('skip libxml2 test variant for version < 2.12');
++?>
+ --ENV--
+ XML_FILE=/not_well_formed.xml
+ LOAD_OPTIONS=0
+diff --git c/ext/dom/tests/DOMDocument_loadXML_error1_gte2_12.phpt i/ext/dom/tests/DOMDocument_loadXML_error1_gte2_12.phpt
+new file mode 100644
+index 0000000000..e1ded0ffad
+--- /dev/null
++++ i/ext/dom/tests/DOMDocument_loadXML_error1_gte2_12.phpt
+@@ -0,0 +1,26 @@
++--TEST--
++Test DOMDocument::loadXML() detects not-well formed XML
++--SKIPIF--
++<?php
++if (LIBXML_VERSION < 21200) die('skip libxml2 test variant for version >= 2.12');
++?>
++--DESCRIPTION--
++This test verifies the method detects an opening and ending tag mismatch
++Environment variables used in the test:
++- XML_FILE: the xml file to load
++- LOAD_OPTIONS: the second parameter to pass to the method
++- EXPECTED_RESULT: the expected result
++--CREDITS--
++Antonio Diaz Ruiz <dejalatele@gmail.com>
++--EXTENSIONS--
++dom
++--ENV--
++XML_FILE=/not_well_formed.xml
++LOAD_OPTIONS=0
++EXPECTED_RESULT=0
++--FILE_EXTERNAL--
++domdocumentloadxml_test_method.inc
++--EXPECTF--
++Warning: DOMDocument::load%r(XML){0,1}%r(): Opening and ending tag mismatch: title line 5 and book %s
++
++Warning: DOMDocument::load%r(XML){0,1}%r(): %rexpected '>'|Opening and ending tag mismatch: book line (4|5) and books%r %s
+diff --git c/ext/dom/tests/DOMDocument_loadXML_error2_gte2_12.phpt i/ext/dom/tests/DOMDocument_loadXML_error2_gte2_12.phpt
+new file mode 100644
+index 0000000000..6a3ff5841f
+--- /dev/null
++++ i/ext/dom/tests/DOMDocument_loadXML_error2_gte2_12.phpt
+@@ -0,0 +1,30 @@
++--TEST--
++Test DOMDocument::loadXML() detects not-well formed XML
++--SKIPIF--
++<?php
++if (LIBXML_VERSION < 21200) die('skip libxml2 test variant for version >= 2.12');
++?>
++--DESCRIPTION--
++This test verifies the method detects attributes values not closed between " or '
++Environment variables used in the test:
++- XML_FILE: the xml file to load
++- LOAD_OPTIONS: the second parameter to pass to the method
++- EXPECTED_RESULT: the expected result
++--CREDITS--
++Antonio Diaz Ruiz <dejalatele@gmail.com>
++--EXTENSIONS--
++dom
++--ENV--
++XML_FILE=/not_well_formed2.xml
++LOAD_OPTIONS=0
++EXPECTED_RESULT=0
++--FILE_EXTERNAL--
++domdocumentloadxml_test_method.inc
++--EXPECTF--
++Warning: DOMDocument::loadXML(): AttValue: " or ' expected in Entity, line: 4 in %s on line %d
++
++Warning: DOMDocument::loadXML(): internal error: xmlParseStartTag: problem parsing attributes in Entity, line: 4 in %s on line %d
++
++Warning: DOMDocument::loadXML(): Couldn't find end of Start Tag book line 4 in Entity, line: 4 in %s on line %d
++
++Warning: DOMDocument::loadXML(): Opening and ending tag mismatch: books line 3 and book in Entity, line: 7 in %s on line %d
+diff --git c/ext/dom/tests/DOMDocument_load_error1.phpt i/ext/dom/tests/DOMDocument_load_error1.phpt
+index a517af120a..87564c521b 100644
+--- c/ext/dom/tests/DOMDocument_load_error1.phpt
++++ i/ext/dom/tests/DOMDocument_load_error1.phpt
+@@ -12,6 +12,9 @@ Antonio Diaz Ruiz <dejalatele@gmail.com>
+ assert.bail=true
+ --SKIPIF--
+ <?php include('skipif.inc'); ?>
++<?php
++if (LIBXML_VERSION >= 21200) die('skip libxml2 test variant for version < 2.12');
++?>
+ --ENV--
+ XML_FILE=/not_well_formed.xml
+ LOAD_OPTIONS=0
+diff --git c/ext/dom/tests/DOMDocument_load_error1_gte2_12.phpt i/ext/dom/tests/DOMDocument_load_error1_gte2_12.phpt
+new file mode 100644
+index 0000000000..183c8406fd
+--- /dev/null
++++ i/ext/dom/tests/DOMDocument_load_error1_gte2_12.phpt
+@@ -0,0 +1,26 @@
++--TEST--
++Test DOMDocument::load() detects not-well formed XML
++--SKIPIF--
++<?php
++if (LIBXML_VERSION < 21200) die('skip libxml2 test variant for version >= 2.12');
++?>
++--DESCRIPTION--
++This test verifies the method detects an opening and ending tag mismatch
++Environment variables used in the test:
++- XML_FILE: the xml file to load
++- LOAD_OPTIONS: the second parameter to pass to the method
++- EXPECTED_RESULT: the expected result
++--CREDITS--
++Antonio Diaz Ruiz <dejalatele@gmail.com>
++--EXTENSIONS--
++dom
++--ENV--
++XML_FILE=/not_well_formed.xml
++LOAD_OPTIONS=0
++EXPECTED_RESULT=0
++--FILE_EXTERNAL--
++domdocumentload_test_method.inc
++--EXPECTF--
++Warning: DOMDocument::load%r(XML){0,1}%r(): Opening and ending tag mismatch: title line 5 and book %s
++
++Warning: DOMDocument::load%r(XML){0,1}%r(): %rexpected '>'|Opening and ending tag mismatch: book line (4|5) and books%r %s
+diff --git c/ext/dom/tests/DOMDocument_load_error2_gte2_12.phpt i/ext/dom/tests/DOMDocument_load_error2_gte2_12.phpt
+new file mode 100644
+index 0000000000..4fadf41736
+--- /dev/null
++++ i/ext/dom/tests/DOMDocument_load_error2_gte2_12.phpt
+@@ -0,0 +1,30 @@
++--TEST--
++Test DOMDocument::load() detects not-well formed
++--SKIPIF--
++<?php
++if (LIBXML_VERSION < 21200) die('skip libxml2 test variant for version >= 2.12');
++?>
++--DESCRIPTION--
++This test verifies the method detects attributes values not closed between " or '
++Environment variables used in the test:
++- XML_FILE: the xml file to load
++- LOAD_OPTIONS: the second parameter to pass to the method
++- EXPECTED_RESULT: the expected result
++--CREDITS--
++Antonio Diaz Ruiz <dejalatele@gmail.com>
++--EXTENSIONS--
++dom
++--ENV--
++XML_FILE=/not_well_formed2.xml
++LOAD_OPTIONS=0
++EXPECTED_RESULT=0
++--FILE_EXTERNAL--
++domdocumentload_test_method.inc
++--EXPECTF--
++Warning: DOMDocument::load(): AttValue: " or ' expected in %s on line %d
++
++Warning: DOMDocument::load(): internal error: xmlParseStartTag: problem parsing attributes in %s on line %d
++
++Warning: DOMDocument::load(): Couldn't find end of Start Tag book line 4 in %s on line %d
++
++Warning: DOMDocument::load(): Opening and ending tag mismatch: books line 3 and book in %s on line %d
+diff --git c/ext/dom/tests/domdocumentload_test_method.inc i/ext/dom/tests/domdocumentload_test_method.inc
+new file mode 100644
+index 0000000000..a15c9e53be
+--- /dev/null
++++ i/ext/dom/tests/domdocumentload_test_method.inc
+@@ -0,0 +1,12 @@
++<?php
++include(dirname(__FILE__) . '/domdocumentload_utilities.php');
++
++$doc = new DOMDocument();
++
++$libxml_options = libxml_options_to_int(getenv('LOAD_OPTIONS'));
++
++$result = $doc->load(dirname(__FILE__) . getenv('XML_FILE'), $libxml_options);
++
++$expectedResult = (bool) getenv('EXPECTED_RESULT');
++assert($result === $expectedResult);
++?>
+diff --git c/ext/dom/tests/domdocumentloadxml_test_method.inc i/ext/dom/tests/domdocumentloadxml_test_method.inc
+new file mode 100644
+index 0000000000..9b97e2badd
+--- /dev/null
++++ i/ext/dom/tests/domdocumentloadxml_test_method.inc
+@@ -0,0 +1,12 @@
++<?php
++include(dirname(__FILE__) . '/domdocumentload_utilities.php');
++
++$doc = new DOMDocument();
++
++$libxml_options = libxml_options_to_int(getenv('LOAD_OPTIONS'));
++$result = $doc->loadXML(file_get_contents(dirname(__FILE__) . getenv('XML_FILE')),
++    $libxml_options);
++
++$expectedResult = (bool) getenv('EXPECTED_RESULT');
++assert($result === $expectedResult);
++?>
