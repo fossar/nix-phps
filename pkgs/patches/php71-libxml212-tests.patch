@@ -1,0 +1,28 @@
+diff --git c/ext/dom/tests/DOMDocument_loadXML_error1.phpt i/ext/dom/tests/DOMDocument_loadXML_error1.phpt
+index 9a433d1282..9206d5609f 100644
+--- c/ext/dom/tests/DOMDocument_loadXML_error1.phpt
++++ i/ext/dom/tests/DOMDocument_loadXML_error1.phpt
+@@ -12,6 +12,9 @@ Antonio Diaz Ruiz <dejalatele@gmail.com>
+ assert.bail=true
+ --SKIPIF--
+ <?php include('skipif.inc'); ?>
++<?php
++if (LIBXML_VERSION >= 21200) die('skip libxml2 test variant for version < 2.12');
++?>
+ --ENV--
+ XML_FILE=/not_well_formed.xml
+ LOAD_OPTIONS=0
+diff --git c/ext/dom/tests/DOMDocument_load_error1.phpt i/ext/dom/tests/DOMDocument_load_error1.phpt
+index 4c661f7e69..2eec716fe0 100644
+--- c/ext/dom/tests/DOMDocument_load_error1.phpt
++++ i/ext/dom/tests/DOMDocument_load_error1.phpt
+@@ -12,6 +12,9 @@ Antonio Diaz Ruiz <dejalatele@gmail.com>
+ assert.bail=true
+ --SKIPIF--
+ <?php include('skipif.inc'); ?>
++<?php
++if (LIBXML_VERSION >= 21200) die('skip libxml2 test variant for version < 2.12');
++?>
+ --ENV--
+ XML_FILE=/not_well_formed.xml
+ LOAD_OPTIONS=0
