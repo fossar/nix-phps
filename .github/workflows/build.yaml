@@ -34,13 +34,14 @@ jobs:
       # We want to fix failures individually.
       fail-fast: false
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v4
+        uses: DeterminateSystems/nix-installer-action@v9
 
       - name: Set up Nix cache
-        uses: cachix/cachix-action@v12
+        uses: cachix/cachix-action@v14
         with:
           name: fossar
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
