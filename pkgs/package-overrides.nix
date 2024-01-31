@@ -752,6 +752,29 @@ in
         ];
       });
 
+
+    sqlite3 = prev.extensions.sqlite3.overrideAttrs (attrs: {
+      patches =
+        let
+          upstreamPatches =
+            attrs.patches or [];
+
+          ourPatches =
+            lib.optionals (lib.versionOlder prev.php.version "8.1" && lib.versionAtLeast prev.php.version "7.1") [
+              # Fix GH-12633: sqlite3_defensive.phpt fails with sqlite 3.44.0
+              # https://github.com/php/php-src/commit/2a4775d6a73e9f6d4fc8e7df6f052aa18790a8e9
+              (pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/2a4775d6a73e9f6d4fc8e7df6f052aa18790a8e9.patch";
+                hash = "sha256-2VNfURGZmIEXtoLxOLX5wec9mqNGEWPY3ofCMw4E7S0=";
+                excludes = [
+                  "NEWS"
+                ];
+              })
+            ];
+        in
+        ourPatches ++ upstreamPatches;
+    });
+
     tidy = prev.extensions.tidy.overrideAttrs (attrs: {
       patches =
         let
