@@ -26,6 +26,11 @@ let
         {
           patches =
             attrs.patches or []
+            ++ prev.lib.optionals (prev.lib.versions.majorMinor args.version == "5.6") [
+              # Patch to make it build with autoconf >= 2.72
+              # Source: https://aur.archlinux.org/packages/php56-ldap?all_deps=1#comment-954506
+              ./patches/php56-autoconf.patch
+            ]
             ++ prev.lib.optionals (prev.lib.versions.majorMinor args.version == "7.2") [
               # Building the bundled intl extension fails on Mac OS.
               # See https://bugs.php.net/bug.php?id=76826 for more information.

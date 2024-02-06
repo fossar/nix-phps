@@ -1,0 +1,26 @@
+From ba4055cccc859a5b65158fddabdae6fec21dbb60 Mon Sep 17 00:00:00 2001
+From: Pol Dellaiera <pol.dellaiera@protonmail.com>
+Date: Tue, 6 Feb 2024 18:50:49 +0100
+Subject: [PATCH] fix for autoconf 2.72
+
+---
+ TSRM/threads.m4 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/TSRM/threads.m4 b/TSRM/threads.m4
+index 38494ce7ca..42f7bb9271 100644
+--- a/TSRM/threads.m4
++++ b/TSRM/threads.m4
+@@ -135,8 +135,8 @@ else
+       fi
+     done
+   fi
+-fi
+ ])
++fi
+ 
+ AC_CACHE_CHECK(for pthreads_lib, ac_cv_pthreads_lib,[
+ ac_cv_pthreads_lib=
+-- 
+2.43.0
+
