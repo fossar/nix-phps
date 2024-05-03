@@ -393,6 +393,15 @@ in
       else
         prev.extensions.mbstring;
 
+    mcrypt =
+      if lib.versionOlder prev.php.version "7.0" then
+        prev.mkExtension {
+          name = "mcrypt";
+          configureFlags = [ "--with-mcrypt=${pkgs.libmcrypt.outPath}" ];
+        }
+      else
+        throw "php.extensions.mcrypt requires PHP version < 7.0.";
+
     memcached =
       if lib.versionOlder prev.php.version "7.0" then
         prev.extensions.memcached.overrideAttrs (attrs: {
