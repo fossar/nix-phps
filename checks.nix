@@ -13,6 +13,12 @@ let
       drv = { php, ... }: php;
     };
 
+    mcrypt = {
+      description = "Build Mcrypt extension";
+      enabled = { php, lib, ... }: lib.versionOlder php.version "7";
+      drv = { php, ... }: php.extensions.mcrypt;
+    };
+
     imagick = {
       description = "Build Imagick extension";
       drv = { php, ... }: php.extensions.imagick;
