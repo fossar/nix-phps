@@ -1,0 +1,34 @@
+From 81b20d6b5ced850a4b173b26499a3ed3266bdaa4 Mon Sep 17 00:00:00 2001
+From: Pol Dellaiera <pol.dellaiera@protonmail.com>
+Date: Mon, 24 Jul 2023 05:23:09 +0200
+Subject: [PATCH] fix config.m4
+
+---
+ config.m4 | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/config.m4 b/config.m4
+index 8033193..3327a53 100644
+--- a/config.m4
++++ b/config.m4
+@@ -9,7 +9,7 @@ if test "$PHP_COUCHBASE" != "no"; then
+     LIBCOUCHBASE_DIR=$PHP_COUCHBASE
+   else
+     AC_MSG_CHECKING(for libcouchbase in default path)
+-    for i in /usr/local /usr; do
++    for i in @libcouchbase@; do
+       if test -r $i/include/libcouchbase/couchbase.h; then
+         LIBCOUCHBASE_DIR=$i
+         AC_MSG_RESULT(found in $i)
+@@ -163,6 +163,8 @@ COUCHBASE_FILES=" \
+     igbinary_inc_path="$phpincludedir"
+   elif test -f "$phpincludedir/ext/igbinary/igbinary.h"; then
+     igbinary_inc_path="$phpincludedir"
++  elif test -f "@igbinary@/include/ext/igbinary/igbinary.h"; then
++    igbinary_inc_path="@igbinary@/include"
+   fi
+   if test "$igbinary_inc_path" = ""; then
+     AC_MSG_WARN([Cannot find igbinary.h])
+-- 
+2.41.0
+
