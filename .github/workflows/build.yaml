@@ -75,6 +75,10 @@ jobs:
         if: ${{ steps.params.outputs.major < 8 && matrix.archs.arch == 'x86_64-linux' }}
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-redis3
 
+      - name: Build Mcrypt extension
+        if: ${{ steps.params.outputs.major < 7 }}
+        run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-mcrypt
+
       - name: Build MySQL extension
         if: ${{ steps.params.outputs.major < 7 }}
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-mysql
