@@ -835,7 +835,24 @@ in
 
     xdebug =
       # xdebug versions were determined using https://xdebug.org/docs/compat
-      if lib.versionAtLeast prev.php.version "8.0" then
+      if lib.versionAtLeast prev.php.version "8.4" then
+        prev.extensions.xdebug.overrideAttrs (attrs: {
+          name = "xdebug-3.4.0alpha1";
+          version = "3.4.0alpha1";
+          src = pkgs.fetchurl {
+            url = "https://xdebug.org/files/xdebug-3.4.0alpha1.tgz";
+            hash = "sha256-S4oizwlhom50uV+ToV6ctdWka8d2CKnAPb2YmWOytOc=";
+          };
+
+          patches = [
+            # Fix missing ZEND_EXIT
+            (pkgs.fetchpatch {
+              url = "https://github.com/xdebug/xdebug/commit/6ecd35f898e67cbe7f9257e7cb3a4c602a3dc8ec.patch";
+              hash = "sha256-IYc1KKPBYek4AXEijoM9RaTwp51J0Gz/CQ1HgmTct3Q=";
+            })
+          ];
+        })
+      else if lib.versionAtLeast prev.php.version "8.0" then
         prev.extensions.xdebug
       else if lib.versionAtLeast prev.php.version "7.2" then
         prev.extensions.xdebug.overrideAttrs (attrs: {
