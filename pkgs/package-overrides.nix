@@ -120,19 +120,19 @@ in
                 "ext/dom/tests/bug80268.phpt"
               ];
             })
-          ] ++ lib.optionals (lib.versionOlder prev.php.version "7.3" && lib.versionAtLeast prev.php.version "7.1") [
+          ] ++ lib.optionals (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "7.3") [
             # Patch rebased from https://github.com/php/php-src/commit/061058a9b1bbd90d27d97d79aebcf2b5029767b0
             # Fix PHP tests with libxml2 2.12
             ./patches/php71-libxml212-tests.patch
-          ] ++ lib.optionals (lib.versionOlder prev.php.version "7.4" && lib.versionAtLeast prev.php.version "7.3") [
+          ] ++ lib.optionals (lib.versionAtLeast prev.php.version "7.3" && lib.versionOlder prev.php.version "7.4") [
             # Patch rebased from https://github.com/php/php-src/commit/061058a9b1bbd90d27d97d79aebcf2b5029767b0
             # Fix PHP tests with libxml2 2.12
             ./patches/php73-libxml212-tests.patch
-          ] ++ lib.optionals (lib.versionOlder prev.php.version "8.1" && lib.versionAtLeast prev.php.version "7.4") [
+          ] ++ lib.optionals (lib.versionAtLeast prev.php.version "7.4" && lib.versionOlder prev.php.version "8.1") [
             # Patch rebased from https://github.com/php/php-src/commit/061058a9b1bbd90d27d97d79aebcf2b5029767b0
             # Fix PHP tests with libxml2 2.12
             ./patches/php74-libxml212-tests.patch
-          ] ++ lib.optionals (lib.versionOlder prev.php.version "8.2.14" && lib.versionAtLeast prev.php.version "8.1") [
+          ] ++ lib.optionals (lib.versionAtLeast prev.php.version "8.1" && lib.versionOlder prev.php.version "8.2.14") [
             # Patch rebased from https://github.com/php/php-src/commit/0a39890c967aa57225bb6bdf4821aff7a3a3c082
             # Fix compilation errors with libxml2 2.12
             ./patches/libxml-ext.patch
@@ -151,7 +151,7 @@ in
         lib.concatStringsSep "\n" [
           (attrs.postPatch or "")
 
-          (lib.optionalString (lib.versionOlder prev.php.version "7.4" && lib.versionAtLeast prev.php.version "7.3") ''
+          (lib.optionalString (lib.versionAtLeast prev.php.version "7.3" && lib.versionOlder prev.php.version "7.4") ''
             # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
             rm ext/dom/tests/bug80268.phpt
           '')
@@ -161,7 +161,7 @@ in
             rm ext/dom/tests/bug43364.phpt
           '')
 
-          (lib.optionalString (lib.versionOlder prev.php.version "8.1" && lib.versionAtLeast prev.php.version "7.1") ''
+          (lib.optionalString (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "8.1") ''
             # Removing tests failing with libxml2 (2.11.4) > 2.10.4
             rm ext/dom/tests/DOMDocument_loadXML_error2.phpt
             rm ext/dom/tests/DOMDocument_load_error2.phpt
@@ -774,7 +774,7 @@ in
             attrs.patches or [];
 
           ourPatches =
-            lib.optionals (lib.versionOlder prev.php.version "8.1" && lib.versionAtLeast prev.php.version "7.1") [
+            lib.optionals (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "8.1") [
               # Fix GH-12633: sqlite3_defensive.phpt fails with sqlite 3.44.0
               # https://github.com/php/php-src/commit/2a4775d6a73e9f6d4fc8e7df6f052aa18790a8e9
               (pkgs.fetchpatch {
