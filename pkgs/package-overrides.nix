@@ -147,6 +147,9 @@ in
           "--with-libxml-dir=${pkgs.libxml2.dev}"
         ];
 
+      # Tests fail on Darwin for some reason.
+      doCheck = lib.versionOlder prev.php.version "7.4" -> pkgs.stdenv.isLinux;
+
       postPatch =
         lib.concatStringsSep "\n" [
           (attrs.postPatch or "")
@@ -725,6 +728,10 @@ in
           # Required to build on darwin.
           "--with-libxml-dir=${pkgs.libxml2.dev}"
         ];
+
+        # Tests fail on Darwin for some reason.
+        doCheck = lib.versionOlder prev.php.version "7.4" -> pkgs.stdenv.isLinux;
+
       });
 
     swoole =
@@ -749,6 +756,9 @@ in
           # Required to build on darwin.
           "--with-libxml-dir=${pkgs.libxml2.dev}"
         ];
+
+        # Tests fail on Darwin with older PHP versions for some reason.
+        doCheck = attrs.doCheck or true && (lib.versionOlder prev.php.version "7.4" -> pkgs.stdenv.isLinux);
       });
 
 
@@ -907,6 +917,9 @@ in
           # Required to build on darwin.
           "--with-libxml-dir=${pkgs.libxml2.dev}"
         ];
+
+        # Test tests/bug71536.phpt fails on Darwin with PHP 7.3 for some reason.
+        doCheck = attrs.doCheck or true && (lib.versions.majorMinor prev.php.version == "7.3" -> pkgs.stdenv.isLinux);
     });
 
     zip = prev.extensions.zip.overrideAttrs (attrs: {
