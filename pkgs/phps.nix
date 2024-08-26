@@ -11,14 +11,14 @@ let
   _mkArgs =
     args:
 
-    {
-      inherit packageOverrides;
-
-      # For passing pcre2 to generic.nix.
+    let
       pcre2 =
         if prev.lib.versionAtLeast args.version "7.3"
         then prev.pcre2
         else prev.pcre;
+    in
+    {
+      inherit packageOverrides pcre2;
 
       phpAttrsOverrides =
         attrs:
@@ -108,10 +108,7 @@ let
 
           # Only pass these attributes if the package function actually expects them.
           prev.lib.filterAttrs (key: _v: builtins.hasAttr key prevArgs) {
-            pcre2 =
-              if prev.lib.versionAtLeast args.version "7.3"
-              then prev.pcre2
-              else prev.pcre;
+            inherit pcre2;
 
             # For passing pcre2 to stuff called with callPackage in php-packages.nix.
             pkgs =
@@ -120,10 +117,7 @@ let
                 prev.lib.makeScope
                   prev.newScope
                   (self: {
-                    pcre2 =
-                      if prev.lib.versionAtLeast args.version "7.3"
-                      then prev.pcre2
-                      else prev.pcre;
+                    inherit pcre2;
                   })
               );
           }
