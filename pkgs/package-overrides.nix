@@ -688,14 +688,7 @@ in
 
     redis =
       if lib.versionOlder prev.php.version "7.0" then
-        prev.extensions.redis.overrideAttrs (attrs: {
-          name = "redis-4.3.0";
-          version = "4.3.0";
-          src = pkgs.fetchurl {
-            url = "http://pecl.php.net/get/redis-4.3.0.tgz";
-            sha256 = "wPBM7DSZYKhCtgkg+4pDNlbi5JTq7W5mM5fWcQKlG6I=";
-          };
-        })
+        final.callPackage ./extensions/redis/4.nix { }
       else if lib.versionOlder prev.php.version "8.0" then
         prev.extensions.redis.overrideAttrs (attrs: {
           preConfigure =
