@@ -2,7 +2,11 @@
 
 This is a repository of Nix package expressions for old versions of PHP.
 
-> **Warning:** backwards compatibility is not guaranteed, pin this repo if you want to avoid breakage.
+> [!CAUTION]
+> Do not use versions other than the [currently supported ones](https://www.php.net/supported-versions.php) for public facing services. The older versions contain many security vulnerabilities and we do not have resources to backport security fixes. They are provided for development purposes only.
+
+> [!WARNING]
+> Backwards compatibility is not guaranteed, pin this repo if you want to avoid breakage.
 
 ## Why?
 
@@ -16,13 +20,13 @@ This package is regularly updated to match latest Nixpkgs and the PHP packages u
 
 The following versions are currently available:
 
-- `php56`
-- `php70`
-- `php71`
-- `php72`
-- `php73`
-- `php74`
-- `php80`
+- `php56` **INSECURE!**
+- `php70` **INSECURE!**
+- `php71` **INSECURE!**
+- `php72` **INSECURE!**
+- `php73` **INSECURE!**
+- `php74` **INSECURE!**
+- `php80` **INSECURE!**
 - `php81`
 - `php82`
 - `php83`
