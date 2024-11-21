@@ -81,15 +81,22 @@ in
       else
         final.callPackage ./extensions/blackfire/1.50.0.nix { inherit prev; };
 
-    couchbase = prev.extensions.couchbase.overrideAttrs (attrs: {
-      preConfigure =
-        let
-          deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
-            final.extensions.json
-          ];
-        in
-        attrs.preConfigure or "" + linkInternalDeps deps;
-    });
+    couchbase =
+      if lib.versionOlder prev.php.version "7.0" then
+        final.callPackage ./extensions/couchbase/couchbase-2.6.2.nix {
+          inherit prev;
+          libcouchbase = final.callPackage ./extensions/couchbase/libcouchbase-2.10.4.nix { };
+        }
+      else
+        prev.extensions.couchbase.overrideAttrs (attrs: {
+          preConfigure =
+            let
+              deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
+                final.extensions.json
+              ];
+            in
+            attrs.preConfigure or "" + linkInternalDeps deps;
+        });
 
     datadog_trace =
       if lib.versionAtLeast prev.php.version "8.3" then

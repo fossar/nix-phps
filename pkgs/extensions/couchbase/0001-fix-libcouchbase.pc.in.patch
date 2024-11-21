@@ -1,0 +1,28 @@
+From e3343d8392b68f7a432a5d45dbcb09df41e264da Mon Sep 17 00:00:00 2001
+From: Pol Dellaiera <pol.dellaiera@protonmail.com>
+Date: Mon, 24 Jul 2023 05:43:59 +0200
+Subject: [PATCH] fix libcouchbase.pc.in
+
+Nix related patch
+---
+ packaging/libcouchbase.pc.in | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/packaging/libcouchbase.pc.in b/packaging/libcouchbase.pc.in
+index 94820a65..95360f43 100644
+--- a/packaging/libcouchbase.pc.in
++++ b/packaging/libcouchbase.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@CMAKE_INSTALL_PREFIX@
+-exec_prefix=${prefix}/@CMAKE_INSTALL_BINDIR@
+-includedir=${prefix}/include
+-libdir=${prefix}/@CMAKE_INSTALL_LIBDIR@
++exec_prefix=@CMAKE_INSTALL_FULL_LIBDIR@
++includedir=@CMAKE_INSTALL_FULL_LIBDIR@/include
++libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+ 
+ Name: libcouchbase @LCB_VERSION@
+ Description: Couchbase client library
+-- 
+2.41.0
+
