@@ -132,7 +132,11 @@ in
             # Patch rebased from https://github.com/php/php-src/commit/061058a9b1bbd90d27d97d79aebcf2b5029767b0
             # Fix PHP tests with libxml2 2.12
             ./patches/php74-libxml212-tests.patch
-          ] ++ lib.optionals (lib.versionAtLeast prev.php.version "8.1" && lib.versionOlder prev.php.version "8.2.14") [
+          ] ++ lib.optionals (lib.versionAtLeast prev.php.version "8.2" && lib.versionOlder prev.php.version "8.2.14") [
+            # Patch rebased from https://github.com/php/php-src/commit/0a39890c967aa57225bb6bdf4821aff7a3a3c082
+            # Fix compilation errors with libxml2 2.12
+            ./patches/libxml-ext.patch
+          ] ++ lib.optionals (lib.versionAtLeast prev.php.version "8.1" && lib.versionOlder prev.php.version "8.1.31") [
             # Patch rebased from https://github.com/php/php-src/commit/0a39890c967aa57225bb6bdf4821aff7a3a3c082
             # Fix compilation errors with libxml2 2.12
             ./patches/libxml-ext.patch
