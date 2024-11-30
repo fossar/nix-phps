@@ -757,8 +757,17 @@ in
           "--with-libxml-dir=${pkgs.libxml2.dev}"
         ];
 
-        # Tests fail on Darwin with older PHP versions for some reason.
-        doCheck = attrs.doCheck or true && (lib.versionOlder prev.php.version "7.4" -> pkgs.stdenv.isLinux);
+      # Tests fail on Darwin with older PHP versions for some reason.
+      doCheck = attrs.doCheck or true && (lib.versionOlder prev.php.version "7.4" -> pkgs.stdenv.isLinux);
+
+      postPatch =
+        attrs.postPatch or ""
+        + lib.optionalString (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "7.4") ''
+          rm ext/soap/tests/bugs/bug66112.phpt
+        ''
+        + lib.optionalString (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "7.2") ''
+          rm ext/soap/tests/bugs/bug76348.phpt
+        '';
       });
 
 
