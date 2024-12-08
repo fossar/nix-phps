@@ -349,17 +349,6 @@ in
         ourPatches ++ upstreamPatches;
     });
 
-    imagick = if lib.versionAtLeast prev.php.version "8.4" then
-      prev.extensions.imagick.overrideAttrs (attrs: {
-        patches = (attrs.patches or []) ++ [
-          (pkgs.fetchpatch {
-            url = "https://github.com/Imagick/imagick/commit/65e27f2bc02e7e8f1bf64e26e359e42a1331fca1.patch";
-            hash ="sha256-I0FwdqtQ/Y/QVkCl+nWPBIxsdQY6qcjdwiA/BaLNl7g=";
-          })
-        ];
-      })
-      else prev.extensions.imagick;
-
     imap =
       if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
         prev.extensions.imap.overrideAttrs (attrs: {
