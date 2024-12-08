@@ -270,6 +270,21 @@ in
       else
         prev.extensions.grpc;
 
+    iconv = prev.extensions.iconv.overrideAttrs (attrs: {
+      patches =
+        let
+          upstreamPatches =
+            attrs.patches or [];
+
+          ourPatches =
+            lib.optionals (lib.versionOlder prev.php.version "8.0") [
+              # Header path defaults to FHS location, preventing the configure script from detecting errno support.
+              ./patches/iconv-header-path.patch
+            ];
+        in
+        ourPatches ++ upstreamPatches;
+    });
+
     igbinary =
       if lib.versionOlder prev.php.version "7.0" then
         prev.extensions.igbinary.overrideAttrs (attrs: {
@@ -282,6 +297,18 @@ in
         })
       else
         prev.extensions.igbinary;
+
+    imap =
+      if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
+        prev.extensions.imap.overrideAttrs (attrs: {
+          patches = (attrs.patches or [ ]) ++ [
+            (pkgs.fetchpatch {
+              url = "https://github.com/php/php-src/commit/f9cbeaa0338520f6c4a4b17555f558634b0dd955.patch";
+              hash = "sha256-Gzxsh99e0HIrDz6r+9XWUw1BQLKWuRm8RQq9p0KxBVs=";
+            })
+          ];
+        })
+      else prev.extensions.imap;
 
     inotify =
       if lib.versionOlder prev.php.version "7.0" then
@@ -333,33 +360,6 @@ in
     } // lib.optionalAttrs (lib.versionOlder prev.php.version "7.1" && pkgs.stdenv.cc.isClang) {
       NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "") + " -Wno-register";
     });
-
-    iconv = prev.extensions.iconv.overrideAttrs (attrs: {
-      patches =
-        let
-          upstreamPatches =
-            attrs.patches or [];
-
-          ourPatches =
-            lib.optionals (lib.versionOlder prev.php.version "8.0") [
-              # Header path defaults to FHS location, preventing the configure script from detecting errno support.
-              ./patches/iconv-header-path.patch
-            ];
-        in
-        ourPatches ++ upstreamPatches;
-    });
-
-    imap =
-      if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
-        prev.extensions.imap.overrideAttrs (attrs: {
-          patches = (attrs.patches or [ ]) ++ [
-            (pkgs.fetchpatch {
-              url = "https://github.com/php/php-src/commit/f9cbeaa0338520f6c4a4b17555f558634b0dd955.patch";
-              hash = "sha256-Gzxsh99e0HIrDz6r+9XWUw1BQLKWuRm8RQq9p0KxBVs=";
-            })
-          ];
-        })
-      else prev.extensions.imap;
 
     json =
       if lib.versionAtLeast prev.php.version "8.0" then
