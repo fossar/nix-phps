@@ -696,7 +696,7 @@ in
     redis =
       if lib.versionOlder prev.php.version "7.0" then
         final.callPackage ./extensions/redis/4.nix { }
-      else if lib.versionOlder prev.php.version "7.1" then
+      else if lib.versionOlder prev.php.version "7.3" then
         final.callPackage ./extensions/redis/6.0.nix { }
       else if lib.versionOlder prev.php.version "8.0" then
         prev.extensions.redis.overrideAttrs (attrs: {
