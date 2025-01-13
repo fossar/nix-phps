@@ -298,17 +298,31 @@ in
       else
         prev.extensions.igbinary;
 
-    imap =
-      if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
-        prev.extensions.imap.overrideAttrs (attrs: {
-          patches = (attrs.patches or [ ]) ++ [
-            (pkgs.fetchpatch {
-              url = "https://github.com/php/php-src/commit/f9cbeaa0338520f6c4a4b17555f558634b0dd955.patch";
-              hash = "sha256-Gzxsh99e0HIrDz6r+9XWUw1BQLKWuRm8RQq9p0KxBVs=";
-            })
-          ];
-        })
-      else prev.extensions.imap;
+    imap = prev.extensions.imap.overrideAttrs (attrs: {
+      patches =
+        if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
+          (
+            (attrs.patches or [ ])
+            ++ [
+              (pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/f9cbeaa0338520f6c4a4b17555f558634b0dd955.patch";
+                hash = "sha256-Gzxsh99e0HIrDz6r+9XWUw1BQLKWuRm8RQq9p0KxBVs=";
+              })
+            ]
+          )
+        else
+          (attrs.patches or [ ]);
+
+      postPatch =
+        if lib.versionOlder prev.php.version "8.1" then
+          attrs.postPatch or ""
+          + ''
+            rm ext/imap/tests/imap_mutf7_to_utf8.phpt
+            rm ext/imap/tests/imap_utf8_to_mutf7_basic.phpt
+          ''
+        else
+          (attrs.postPatch or "");
+    });
 
     inotify =
       if lib.versionOlder prev.php.version "7.0" then
