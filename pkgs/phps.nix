@@ -9,15 +9,19 @@ let
   packageOverrides = import ./package-overrides.nix prev;
 
   libxml2_12 = prev.callPackage ./libxml2/2.12.nix { };
+  libxml2_11 = prev.callPackage ./libxml2/2.11.nix { };
 
   _mkArgs =
     args:
 
     let
       libxml2 =
-        if prev.lib.versionAtLeast args.version "8.1"
-        then prev.libxml2
-        else libxml2_12;
+        if prev.lib.versionAtLeast args.version "8.1" then
+          prev.libxml2
+        else if prev.lib.versionAtLeast args.version "5.6" then
+          libxml2_11
+        else
+          libxml2_12;
 
       # Use a consistent libxml2 version.
       libxslt = prev.libxslt.override { inherit libxml2; };
