@@ -6,7 +6,7 @@
   pkg-config,
   glib,
   hunspell,
-  hspell
+  hspell,
 }:
 
 stdenv.mkDerivation (finalAttrs: {

@@ -1,4 +1,12 @@
-{ mkDerivation, fetchurl, makeWrapper, unzip, lib, php }:
+{
+  mkDerivation,
+  fetchurl,
+  makeWrapper,
+  unzip,
+  lib,
+  php,
+}:
+
 let
   pname = "composer";
   version = "2.2.24";
