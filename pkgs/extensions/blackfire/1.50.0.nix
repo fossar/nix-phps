@@ -1,7 +1,7 @@
 {
   stdenv,
   pkgs,
-  prev
+  prev,
 }:
 
 let
@@ -28,15 +28,16 @@ let
     };
     "aarch64-darwin" = {
       system = "arm64";
-      hash = {};
+      hash = { };
     };
     "x86_64-darwin" = {
       system = "amd64";
-      hash = {};
+      hash = { };
     };
   };
 
-  makeSource = { system, phpMajor }:
+  makeSource =
+    { system, phpMajor }:
     let
       isLinux = builtins.match ".+-linux" system != null;
     in

@@ -1,7 +1,7 @@
 {
   stdenv,
   pkgs,
-  prev
+  prev,
 }:
 
 let
@@ -65,7 +65,8 @@ let
     };
   };
 
-  makeSource = { system, phpMajor }:
+  makeSource =
+    { system, phpMajor }:
     let
       isLinux = builtins.match ".+-linux" system != null;
     in

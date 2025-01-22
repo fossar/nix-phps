@@ -57,8 +57,7 @@ let
       description = "Check that composer PHAR works";
       drv =
         { pkgs, php, ... }:
-        pkgs.runCommand
-          "composer-phar-check"
+        pkgs.runCommand "composer-phar-check"
           {
             buildInputs = [
               php.packages.composer
@@ -74,13 +73,15 @@ let
       description = "Validate php.extensions.mysqli default unix socket path";
       drv =
         { pkgs, php, ... }:
-        pkgs.runCommand
-          "mysqli-socket-path-check"
+        pkgs.runCommand "mysqli-socket-path-check"
           {
             buildInputs = [
-              (php.withExtensions ({ all, ... }: [
-                all.mysqli
-              ]))
+              (php.withExtensions (
+                { all, ... }:
+                [
+                  all.mysqli
+                ]
+              ))
             ];
           }
           ''
@@ -93,13 +94,15 @@ let
       description = "Validate php.extensions.pdo_mysql default unix socket path";
       drv =
         { pkgs, php, ... }:
-        pkgs.runCommand
-          "pdo_mysql-socket-path-check"
+        pkgs.runCommand "pdo_mysql-socket-path-check"
           {
             buildInputs = [
-              (php.withExtensions ({ all, ... }: [
-                all.pdo_mysql
-              ]))
+              (php.withExtensions (
+                { all, ... }:
+                [
+                  all.pdo_mysql
+                ]
+              ))
             ];
           }
           ''
@@ -111,58 +114,62 @@ let
 
   inherit (pkgs) lib;
 
-  /* AttrSet<phpName, AttrSet<checkName, checkDrv>> */
-  checksPerVersion =
-    lib.listToAttrs (
-      builtins.map
-        (phpName:
-          let
-            php = packages.${phpName};
-            phpVersion = lib.versions.majorMinor php.version;
-            args = { inherit lib php pkgs system; };
-            supportedChecks = lib.filterAttrs (_name: { enabled ? lib.const true, ... }: enabled args) checks;
-          in
-          {
-            name = phpName;
-            value =
-              lib.mapAttrs
-                (
-                  _name:
-                  {
-                    description,
-                    drv,
-                    ...
-                  }:
-
-                  let
-                    check = drv args;
-                  in
-                  check // {
-                    passthru = check.passthru or { } // {
-                      description = "PHP ${phpVersion} – ${description}";
-                    };
-                  }
-                )
-                supportedChecks;
-          }
-        )
-        phpPackages
-    );
-in
-lib.foldAttrs
-  lib.mergeAttrs
-  {}
-  (
-    lib.mapAttrsToList
-    (
+  # AttrSet<phpName, AttrSet<checkName, checkDrv>>
+  checksPerVersion = lib.listToAttrs (
+    builtins.map (
       phpName:
+      let
+        php = packages.${phpName};
+        phpVersion = lib.versions.majorMinor php.version;
+        args = {
+          inherit
+            lib
+            php
+            pkgs
+            system
+            ;
+        };
+        supportedChecks = lib.filterAttrs (
+          _name:
+          {
+            enabled ? lib.const true,
+            ...
+          }:
+          enabled args
+        ) checks;
+      in
+      {
+        name = phpName;
+        value = lib.mapAttrs (
+          _name:
+          {
+            description,
+            drv,
+            ...
+          }:
 
-      lib.mapAttrs'
-        (
-          name:
+          let
+            check = drv args;
+          in
+          check
+          // {
+            passthru = check.passthru or { } // {
+              description = "PHP ${phpVersion} – ${description}";
+            };
+          }
+        ) supportedChecks;
+      }
+    ) phpPackages
+  );
+in
+lib.foldAttrs lib.mergeAttrs { } (
+  lib.mapAttrsToList (
+    phpName:
 
-          lib.nameValuePair "${phpName}-${name}"
-        )
+    lib.mapAttrs' (
+      name:
+
+      lib.nameValuePair "${phpName}-${name}"
     )
-    checksPerVersion
-  )
+  ) checksPerVersion
+)

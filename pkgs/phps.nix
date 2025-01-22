@@ -2,8 +2,7 @@ nixpkgs:
 
 # These are older versions of PHP removed from Nixpkgs.
 
-final:
-prev:
+final: prev:
 
 let
   packageOverrides = import ./package-overrides.nix prev;
@@ -14,18 +13,12 @@ let
     args:
 
     let
-      libxml2 =
-        if prev.lib.versionAtLeast args.version "8.1"
-        then prev.libxml2
-        else libxml2_12;
+      libxml2 = if prev.lib.versionAtLeast args.version "8.1" then prev.libxml2 else libxml2_12;
 
       # Use a consistent libxml2 version.
       libxslt = prev.libxslt.override { inherit libxml2; };
 
-      pcre2 =
-        if prev.lib.versionAtLeast args.version "7.3"
-        then prev.pcre2
-        else prev.pcre;
+      pcre2 = if prev.lib.versionAtLeast args.version "7.3" then prev.pcre2 else prev.pcre;
     in
     {
       inherit packageOverrides libxml2 pcre2;
@@ -35,7 +28,7 @@ let
 
         {
           patches =
-            attrs.patches or []
+            attrs.patches or [ ]
             ++ prev.lib.optionals (prev.lib.versions.majorMinor args.version == "5.6") [
               # Patch to make it build with autoconf >= 2.72
               # Source: https://aur.archlinux.org/packages/php56-ldap?all_deps=1#comment-954506
@@ -100,18 +93,21 @@ let
               done
             ''
             + attrs.preConfigure;
-        } // prev.lib.optionalAttrs (prev.stdenv.cc.isClang) {
+        }
+        // prev.lib.optionalAttrs (prev.stdenv.cc.isClang) {
           # Downgrade the following errors to warnings. `-Wint-conversion` only affects PHP 7.3.
-          NIX_CFLAGS_COMPILE = (attrs.NIX_CFLAGS_COMPILE or "")
+          NIX_CFLAGS_COMPILE =
+            (attrs.NIX_CFLAGS_COMPILE or "")
             + prev.lib.optionalString (prev.lib.versionOlder args.version "8.2") " -Wno-compare-distinct-pointer-types -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations -Wno-incompatible-function-pointer-types -Wno-incompatible-pointer-types-discards-qualifiers"
             + prev.lib.optionalString (prev.lib.versionOlder args.version "8.0") " -Wno-implicit-int -Wno-implicit-function-declaration"
-            + prev.lib.optionalString (prev.lib.versionAtLeast args.version "7.3" && prev.lib.versionOlder args.version "7.4") " -Wno-int-conversion";
+            + prev.lib.optionalString (
+              prev.lib.versionAtLeast args.version "7.3" && prev.lib.versionOlder args.version "7.4"
+            ) " -Wno-int-conversion";
         };
 
       # For passing libxml2 and pcre2 to php-packages.nix.
       callPackage =
-        cpFn:
-        cpArgs:
+        cpFn: cpArgs:
 
         (prev.callPackage cpFn cpArgs).override (
           prevArgs:
@@ -123,15 +119,11 @@ let
             # For passing pcre2 to stuff called with callPackage in php-packages.nix.
             pkgs =
               prev
-              // (
-                prev.lib.makeScope
-                  prev.newScope
-                  (self: {
-                    inherit libxml2 libxslt pcre2;
-                  })
-              );
+              // (prev.lib.makeScope prev.newScope (self: {
+                inherit libxml2 libxslt pcre2;
+              }));
           }
-      );
+        );
     }
     // args;
 

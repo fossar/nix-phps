@@ -13,9 +13,17 @@
     utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, flake-compat, nixpkgs, utils }:
+  outputs =
+    {
+      self,
+      flake-compat,
+      nixpkgs,
+      utils,
+    }:
+
     # For each supported platform,
-    utils.lib.eachDefaultSystem (system:
+    utils.lib.eachDefaultSystem (
+      system:
       let
         # Let’s merge the package set from Nixpkgs with our custom PHP versions.
         pkgs = import nixpkgs.outPath {
@@ -27,16 +35,31 @@
             self.overlays.default
           ];
         };
-      in rec {
+      in
+      rec {
         packages = {
-          inherit (pkgs) php php56 php70 php71 php72 php73 php74 php80 php81 php82 php83 php84;
+          inherit (pkgs)
+            php
+            php56
+            php70
+            php71
+            php72
+            php73
+            php74
+            php80
+            php81
+            php82
+            php83
+            php84
+            ;
         };
 
         checks = import ./checks.nix {
           inherit packages pkgs system;
         };
       }
-    ) // {
+    )
+    // {
       overlays.default = import ./pkgs/phps.nix nixpkgs.outPath;
     };
 }
