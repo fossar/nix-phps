@@ -11,6 +11,8 @@ let
 
   inherit (prev) lib;
 
+  inherit (import ./lib.nix { inherit lib; }) mergeEnv;
+
   _mkArgs =
     args:
 
@@ -95,16 +97,26 @@ let
               done
             ''
             + attrs.preConfigure;
-        }
-        // lib.optionalAttrs (prev.stdenv.cc.isClang) {
-          # Downgrade the following errors to warnings. `-Wint-conversion` only affects PHP 7.3.
-          NIX_CFLAGS_COMPILE =
-            (attrs.NIX_CFLAGS_COMPILE or "")
-            + lib.optionalString (lib.versionOlder args.version "8.2") " -Wno-compare-distinct-pointer-types -Wno-implicit-const-int-float-conversion -Wno-deprecated-declarations -Wno-incompatible-function-pointer-types -Wno-incompatible-pointer-types-discards-qualifiers"
-            + lib.optionalString (lib.versionOlder args.version "8.0") " -Wno-implicit-int -Wno-implicit-function-declaration"
-            + lib.optionalString (
-              lib.versionAtLeast args.version "7.3" && lib.versionOlder args.version "7.4"
-            ) " -Wno-int-conversion";
+
+          env = mergeEnv attrs {
+            NIX_CFLAGS_COMPILE = lib.optionals prev.stdenv.cc.isClang (
+              # Downgrade the following errors to warnings.
+              lib.optionals (lib.versionOlder args.version "8.2") [
+                "-Wno-compare-distinct-pointer-types"
+                "-Wno-implicit-const-int-float-conversion"
+                "-Wno-deprecated-declarations"
+                "-Wno-incompatible-function-pointer-types"
+                "-Wno-incompatible-pointer-types-discards-qualifiers"
+              ]
+              ++ lib.optionals (lib.versionOlder args.version "8.0") [
+                "-Wno-implicit-int"
+                "-Wno-implicit-function-declaration"
+              ]
+              ++ lib.optionals (lib.versionAtLeast args.version "7.3" && lib.versionOlder args.version "7.4") [
+                "-Wno-int-conversion"
+              ]
+            );
+          };
         };
 
       # For passing libxml2 and pcre2 to php-packages.nix.

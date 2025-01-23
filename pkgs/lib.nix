@@ -42,4 +42,32 @@
     assert builtins.all (line: lineAssertion line string) lines;
 
     lib.foldl removeLine string lines;
+
+  /*
+    Produces a modified `env` from an old `attrs` and a attrset of list of env var values.
+
+    The lists will be concatenated with spaces.
+
+    Type: mergeEnv :: drvAttrs -> attrSet<envName, array<string>> -> attrSet<envName, string>
+  */
+  mergeEnv =
+    attrs: extraEnvs:
+
+    let
+      oldEnv = attrs.env or { };
+
+      appendEnvVar =
+        name: value:
+        let
+          oldVal = oldEnv.${name} or "";
+          sep = lib.optionalString (oldVal != "") " ";
+          stringifiedNewVals = lib.concatStringsSep " " value;
+        in
+        "${oldVal}${sep}${stringifiedNewVals}";
+
+      applicableExtraEnvs = lib.filterAttrs (_name: value: value != [ ]) extraEnvs;
+
+      extraEnvsConcatenated = lib.mapAttrs appendEnvVar applicableExtraEnvs;
+    in
+    oldEnv // extraEnvsConcatenated;
 }
