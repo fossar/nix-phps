@@ -14,7 +14,11 @@ stdenv.mkDerivation (finalAttrs: {
   version = "1.6.1";
 
   src = fetchurl {
-    url = "https://github.com/AbiWord/enchant/releases/download/enchant-${builtins.replaceStrings [ "." ] [ "-" ] finalAttrs.version}/enchant-${finalAttrs.version}.tar.gz";
+    url =
+      let
+        tag = builtins.replaceStrings [ "." ] [ "-" ] finalAttrs.version;
+      in
+      "https://github.com/AbiWord/enchant/releases/download/enchant-${tag}/enchant-${finalAttrs.version}.tar.gz";
     hash = "sha256-vvDZwP7y5Oh0aVa2jk1sZkH2uFvSkI2Rcx77aOup4/U=";
   };
 

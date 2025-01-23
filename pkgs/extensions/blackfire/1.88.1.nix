@@ -71,8 +71,15 @@ let
     in
     assert !isLinux -> (phpMajor != null);
     pkgs.fetchurl {
-      url = "https://packages.blackfire.io/binaries/blackfire-php/${version}/blackfire-php-${if isLinux then "linux" else "darwin"}_${hashes.${system}.system}-php-${builtins.replaceStrings [ "." ] [ "" ] phpMajor}.so";
-      hash = hashes.${system}.hash.${phpMajor} or (throw "php.extensions.blackfire unsupported on PHP ${phpMajor} on ${system}");
+      url =
+        let
+          platform = if isLinux then "linux" else "darwin";
+          versionSuffix = builtins.replaceStrings [ "." ] [ "" ] phpMajor;
+        in
+        "https://packages.blackfire.io/binaries/blackfire-php/${version}/blackfire-php-${platform}_${hashes.${system}.system}-php-${versionSuffix}.so";
+      hash =
+        hashes.${system}.hash.${phpMajor}
+          or (throw "php.extensions.blackfire unsupported on PHP ${phpMajor} on ${system}");
     };
 in
 prev.extensions.blackfire.overrideAttrs (attrs: {
