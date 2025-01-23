@@ -9,12 +9,10 @@ prev:
 let
   patchName = patch: patch.name or (builtins.baseNameOf patch);
 
+  linkExtension = dep: "mkdir -p ext; ln -s ${dep.dev}/include ext/${dep.extensionName}";
+
   linkInternalDeps = extensions: ''
-    ${lib.concatMapStringsSep
-      "\n"
-      (dep: "mkdir -p ext; ln -s ${dep.dev}/include ext/${dep.extensionName}")
-      extensions
-    }
+    ${lib.concatMapStringsSep "\n" linkExtension extensions}
   '';
 
   inherit (pkgs) lib;
