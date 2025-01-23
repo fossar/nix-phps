@@ -20,8 +20,8 @@ buildPecl {
     php.extensions.json
   ];
 
-  env = lib.optionalAttrs (lib.versionOlder php.version "7.2" && stdenv.cc.isClang) {
-    NIX_CFLAGS_COMPILE = "-Wno-implicit-function-declaration -Wno-int-conversion";
+  env = lib.optionalAttrs (lib.versionOlder php.version "7.2") {
+    NIX_CFLAGS_COMPILE = "-Wno-implicit-function-declaration -Wno-int-conversion -Wno-incompatible-pointer-types";
   };
 
   meta = {

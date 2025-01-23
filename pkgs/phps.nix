@@ -13,6 +13,8 @@ let
 
   inherit (import ./lib.nix { inherit lib; }) mergeEnv;
 
+  inherit (prev.stdenv.cc) isClang;
+
   _mkArgs =
     args:
 
@@ -99,13 +101,13 @@ let
             + attrs.preConfigure;
 
           env = mergeEnv attrs {
-            NIX_CFLAGS_COMPILE = lib.optionals prev.stdenv.cc.isClang (
+            NIX_CFLAGS_COMPILE =
               # Downgrade the following errors to warnings.
               lib.optionals (lib.versionOlder args.version "8.2") [
                 "-Wno-compare-distinct-pointer-types"
                 "-Wno-implicit-const-int-float-conversion"
                 "-Wno-deprecated-declarations"
-                "-Wno-incompatible-function-pointer-types"
+                "-Wno-incompatible-${lib.optionalString isClang "function-"}pointer-types"
                 "-Wno-incompatible-pointer-types-discards-qualifiers"
               ]
               ++ lib.optionals (lib.versionOlder args.version "8.0") [
@@ -114,8 +116,7 @@ let
               ]
               ++ lib.optionals (lib.versionAtLeast args.version "7.3" && lib.versionOlder args.version "7.4") [
                 "-Wno-int-conversion"
-              ]
-            );
+              ];
           };
         };
 

@@ -16,6 +16,8 @@ let
 
   inherit (pkgs) lib;
 
+  inherit (pkgs.stdenv.cc) isClang;
+
   inherit (import ./lib.nix { inherit lib; }) mergeEnv removeLines;
 in
 
@@ -202,11 +204,9 @@ in
       ];
 
       env = mergeEnv attrs {
-        NIX_CFLAGS_COMPILE =
-          lib.optionals (lib.versionOlder prev.php.version "7.1" && pkgs.stdenv.cc.isClang)
-            [
-              "-Wno-incompatible-function-pointer-types"
-            ];
+        NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.1") [
+          "-Wno-incompatible-${lib.optionalString isClang "function-"}pointer-types"
+        ];
       };
     });
 
@@ -244,11 +244,9 @@ in
 
     fileinfo = prev.extensions.fileinfo.overrideAttrs (attrs: {
       env = mergeEnv attrs {
-        NIX_CFLAGS_COMPILE =
-          lib.optionals (lib.versionOlder prev.php.version "7.2" && pkgs.stdenv.cc.isClang)
-            [
-              "-Wno-implicit-int"
-            ];
+        NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.2") [
+          "-Wno-implicit-int"
+        ];
       };
     });
 
@@ -334,7 +332,7 @@ in
         prev.extensions.igbinary;
 
     imap =
-      if lib.versionOlder prev.php.version "8.1" && pkgs.stdenv.cc.isClang then
+      if lib.versionOlder prev.php.version "8.1" then
         prev.extensions.imap.overrideAttrs (attrs: {
           patches = (attrs.patches or [ ]) ++ [
             (pkgs.fetchpatch {
@@ -450,10 +448,12 @@ in
     mbstring = prev.extensions.mbstring.overrideAttrs (attrs: {
       env = mergeEnv attrs {
         NIX_CFLAGS_COMPILE =
-          lib.optionals (lib.versionOlder prev.php.version "7.0" && pkgs.stdenv.cc.isClang)
-            [
-              "-Wno-implicit-function-declaration"
-            ];
+          lib.optionals (lib.versionOlder prev.php.version "7.0") [
+            "-Wno-implicit-function-declaration"
+          ]
+          ++ lib.optionals (lib.versionOlder prev.php.version "7.0" && !isClang) [
+            "-Wno-incompatible-pointer-types"
+          ];
       };
     });
 
@@ -766,12 +766,10 @@ in
             attrs.preConfigure or "" + linkInternalDeps deps;
 
           env = mergeEnv attrs {
-            NIX_CFLAGS_COMPILE =
-              lib.optionals (lib.versionOlder prev.php.version "7.2" && pkgs.stdenv.cc.isClang)
-                [
-                  "-Wno-implicit-function-declaration"
-                  "-Wno-int-conversion"
-                ];
+            NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.2") [
+              "-Wno-implicit-function-declaration"
+              "-Wno-int-conversion"
+            ];
           };
         })
       else
@@ -788,6 +786,14 @@ in
         prev.extensions.relay
       else
         throw "php.extensions.relay requires PHP version >= 8.0.";
+
+    session = prev.extensions.session.overrideAttrs (attrs: {
+      env = mergeEnv attrs {
+        NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.0") [
+          "-Wno-incompatible-pointer-types"
+        ];
+      };
+    });
 
     simplexml = prev.extensions.simplexml.overrideAttrs (attrs: {
       configureFlags =
@@ -1034,11 +1040,9 @@ in
         ];
 
       env = mergeEnv attrs {
-        NIX_CFLAGS_COMPILE =
-          lib.optionals (lib.versionOlder prev.php.version "7.0" && pkgs.stdenv.cc.isClang)
-            [
-              "-Wno-incompatible-function-pointer-types"
-            ];
+        NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.0") [
+          "-Wno-incompatible-${lib.optionalString isClang "function-"}pointer-types"
+        ];
       };
     });
   };
