@@ -296,7 +296,42 @@ in
             url = "https://github.com/php/php-src/commit/632b6e7aac207194adc3d0b41615bfb610757f41.patch";
             sha256 = "0xn3ivhc4p070vbk5yx0mzj2n7p04drz3f98i77amr51w0vzv046";
           })
-        ];
+        ]
+        ++
+          lib.optionals (lib.versionAtLeast prev.php.version "8.0" && lib.versionOlder prev.php.version "8.1")
+            [
+              # Throw instead of letting gettext > 0.22.5 crash with `SIGABRT`
+              # when passing `LC_ALL` category to `dcgettext`/`dcngettext` functions.
+              #
+              # This surfaced as a failure of `dcngettext` test, which passes `0`
+              # as a `$category` to those functions. It only affected Darwin
+              # because it defines `LC_ALL` as 0. On Linux, glibc defines `LC_CTYPE` as 0.
+              #
+              # https://github.com/php/php-src/commit/9999a0cb757344974889a6f548727de6f2c3c10d
+              (pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/9999a0cb757344974889a6f548727de6f2c3c10d.patch";
+                hash = "sha256-LHNU6qwn5//z9VVn3aQkQMYEt/LjKgyIUvDen0dhJdg=";
+                excludes = [
+                  "NEWS"
+                  "UPGRADING"
+                ];
+              })
+            ];
+
+      postPatch =
+        attrs.postPatch or ""
+        +
+          lib.optionalString
+            (
+              lib.versionAtLeast prev.php.version "7.1"
+              && lib.versionOlder prev.php.version "8.0"
+              && pkgs.stdenv.isDarwin
+            )
+            ''
+              # Disable test failing on Darwin (see 9999a0cb757344974889a6f548727de6f2c3c10d above)
+              # We do not apply the fix because passing category to `dcgettext`/`dcngettext` functions should be rare.
+              rm ext/gettext/tests/dcngettext.phpt
+            '';
     });
 
     grpc =
