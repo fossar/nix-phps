@@ -104,6 +104,16 @@ in
       else
         prev.extensions.datadog_trace;
 
+    decimal =
+      if lib.versionOlder prev.php.version "7.0" then
+        throw "php.extensions.decimal requires PHP version >= 7.0"
+      else if lib.versionOlder prev.php.version "8.0" then
+        prev.extensions.decimal.overrideAttrs (attrs: {
+          preConfigure = attrs.preConfigure or "" + linkInternalDeps [ final.extensions.json ];
+        })
+      else
+        prev.extensions.decimal;
+
     dom = prev.extensions.dom.overrideAttrs (attrs: {
       patches =
         let
