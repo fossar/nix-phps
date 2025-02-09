@@ -53,6 +53,12 @@ let
       drv = { php, ... }: php.extensions.tidy;
     };
 
+    decimal = {
+      description = "Build Decimal extension";
+      enabled = { php, lib, ... }: lib.versionAtLeast php.version "7";
+      drv = { php, ... }: php.extensions.decimal;
+    };
+
     composer-phar = {
       description = "Check that composer PHAR works";
       drv =
