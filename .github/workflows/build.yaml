@@ -98,6 +98,10 @@ jobs:
       - name: Build Tidy extension
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-tidy
 
+      - name: Build Decimal extension
+        if: ${{ steps.params.outputs.major >= 7 }}
+        run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-decimal
+
       - name: Check that composer PHAR works
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-composer-phar
 
