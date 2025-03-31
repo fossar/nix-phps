@@ -11,6 +11,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Check files for EditorConfig compliance
-        uses: editorconfig-checker/action-editorconfig-checker@4ed7f4cb56cfeef33eaf1b81d6e6514ccadc4ee7 # untagged main
+        uses: editorconfig-checker/action-editorconfig-checker@81ec64b9fccc309b578ba8a4794f1c72ef3865b4 # untagged main
         with:
           version: 2.7.0
