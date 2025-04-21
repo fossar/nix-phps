@@ -96,6 +96,15 @@ in
         attrs.preConfigure or "" + linkInternalDeps deps;
     });
 
+    ctype = prev.extensions.ctype.overrideAttrs (attrs: {
+      postPatch = removeLines (lib.optionals
+        (lib.versionOlder prev.php.version "8.2" && pkgs.stdenv.isDarwin)
+        [
+          "rm ext/ctype/tests/lc_ctype_inheritance.phpt"
+        ]
+      ) attrs.postPatch;
+    });
+
     datadog_trace =
       if lib.versionAtLeast prev.php.version "8.3" then
         throw "php.extensions.datadog_trace requires PHP version >= 5.6 and < 8.3"
