@@ -98,7 +98,7 @@ in
 
     ctype = prev.extensions.ctype.overrideAttrs (attrs: {
       postPatch = removeLines (lib.optionals
-        (lib.versionOlder prev.php.version "8.2" && pkgs.stdenv.isDarwin)
+        (lib.versionOlder prev.php.version "8.3" && pkgs.stdenv.isDarwin)
         [
           "rm ext/ctype/tests/lc_ctype_inheritance.phpt"
         ]
