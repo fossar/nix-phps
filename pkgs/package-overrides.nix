@@ -6,6 +6,8 @@ pkgs:
 final: prev:
 
 let
+  libxml2_12 = pkgs.callPackage ./libxml2/2.12.nix { };
+
   patchName = patch: patch.name or (builtins.baseNameOf patch);
 
   linkExtension = dep: "mkdir -p ext; ln -s ${dep.dev}/include ext/${dep.extensionName}";
@@ -20,7 +22,6 @@ let
 
   inherit (import ./lib.nix { inherit lib; }) mergeEnv removeLines;
 in
-
 {
   buildPecl =
     {
@@ -187,7 +188,7 @@ in
         attrs.configureFlags or [ ]
         ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
           # Required to build on darwin.
-          "--with-libxml-dir=${pkgs.libxml2.dev}"
+          "--with-libxml-dir=${libxml2_12.dev}"
         ];
 
       # Tests fail on Darwin for some reason.
@@ -851,7 +852,7 @@ in
         attrs.configureFlags or [ ]
         ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
           # Required to build on darwin.
-          "--with-libxml-dir=${pkgs.libxml2.dev}"
+          "--with-libxml-dir=${libxml2_12.dev}"
         ];
 
       # Tests fail on Darwin for some reason.
@@ -879,7 +880,7 @@ in
         attrs.configureFlags or [ ]
         ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
           # Required to build on darwin.
-          "--with-libxml-dir=${pkgs.libxml2.dev}"
+          "--with-libxml-dir=${libxml2_12.dev}"
         ];
 
       # Tests fail on Darwin with older PHP versions for some reason.
@@ -954,7 +955,7 @@ in
           name = "wddx";
 
           buildInputs = [
-            pkgs.libxml2
+            libxml2_12
           ];
 
           internalDeps = [
@@ -963,7 +964,7 @@ in
 
           configureFlags = [
             "--enable-wddx"
-            "--with-libxml-dir=${pkgs.libxml2.dev}"
+            "--with-libxml-dir=${libxml2_12.dev}"
           ];
         }
       else
@@ -1015,7 +1016,7 @@ in
         attrs.configureFlags or [ ]
         ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
           # Required to build on darwin.
-          "--with-libxml-dir=${pkgs.libxml2.dev}"
+          "--with-libxml-dir=${libxml2_12.dev}"
         ];
     });
 
@@ -1024,7 +1025,7 @@ in
         attrs.configureFlags or [ ]
         ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
           # Required to build on darwin.
-          "--with-libxml-dir=${pkgs.libxml2.dev}"
+          "--with-libxml-dir=${libxml2_12.dev}"
         ];
     });
 
@@ -1033,7 +1034,7 @@ in
         prev.mkExtension {
           name = "xmlrpc";
           buildInputs = [
-            pkgs.libxml2
+            libxml2_12
             pkgs.libiconv
           ];
           configureFlags =
@@ -1042,7 +1043,7 @@ in
             ]
             ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
               # Required to build on darwin.
-              "--with-libxml-dir=${pkgs.libxml2.dev}"
+              "--with-libxml-dir=${libxml2_12.dev}"
             ];
         }
       else
@@ -1053,7 +1054,7 @@ in
         attrs.configureFlags or [ ]
         ++ lib.optionals (lib.versionOlder prev.php.version "7.4") [
           # Required to build on darwin.
-          "--with-libxml-dir=${pkgs.libxml2.dev}"
+          "--with-libxml-dir=${libxml2_12.dev}"
         ];
 
       # Test tests/bug71536.phpt fails on Darwin with PHP 7.3 for some reason.
