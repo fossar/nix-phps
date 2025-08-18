@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check files for EditorConfig compliance
         uses: editorconfig-checker/action-editorconfig-checker@03d03e1c906b0bd98cb9100ff441eb6e7ed106f6 # untagged main
