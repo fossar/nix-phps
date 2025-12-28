@@ -9,8 +9,6 @@
     };
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-
-    utils.url = "github:numtide/flake-utils";
   };
 
   outputs =
@@ -18,51 +16,63 @@
       self,
       flake-compat,
       nixpkgs,
-      utils,
     }:
-
-    # For each supported platform,
-    utils.lib.eachDefaultSystem (
-      system:
-      let
-        # Let’s merge the package set from Nixpkgs with our custom PHP versions.
-        pkgs = import nixpkgs.outPath {
-          config = {
-            allowUnfree = true;
-          };
+    let
+      pkgss = forAllSystems (
+        system:
+        import nixpkgs {
           inherit system;
+          config.allowUnfree = true;
+          # Let’s merge the package set from Nixpkgs with our custom PHP versions.
           overlays = [
             self.overlays.default
           ];
-        };
-      in
-      rec {
-        packages = {
-          inherit (pkgs)
-            php
-            php56
-            php70
-            php71
-            php72
-            php73
-            php74
-            php80
-            php81
-            php82
-            php83
-            php84
-            php85
-            ;
-        };
+        }
+      );
 
-        checks = import ./checks.nix {
-          inherit packages pkgs system;
-        };
+      forAllSystems = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed;
 
-        formatter = pkgs.nixfmt-tree;
-      }
-    )
-    // {
+      forAllSystemsWithPkgs =
+        f:
+        nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (
+          system:
+          f {
+            pkgs = pkgss.${system};
+            inherit system;
+          }
+        );
+
+      phpPackages = pkgs: {
+        inherit (pkgs)
+          php
+          php56
+          php70
+          php71
+          php72
+          php73
+          php74
+          php80
+          php81
+          php82
+          php83
+          php84
+          php85
+          ;
+      };
+    in
+    {
+      packages = forAllSystemsWithPkgs ({ pkgs, ... }: phpPackages pkgs);
+
+      checks = forAllSystemsWithPkgs (
+        { pkgs, system, ... }:
+        (import ./checks.nix {
+          inherit pkgs system;
+          packages = phpPackages pkgs;
+        })
+      );
+
+      formatter = forAllSystemsWithPkgs ({ pkgs, ... }: pkgs.nixfmt-tree);
+
       overlays.default = import ./pkgs/phps.nix nixpkgs.outPath;
     };
 }
