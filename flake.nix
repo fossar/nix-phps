@@ -4,7 +4,7 @@
   inputs = {
     # Shim to make flake.nix work with stable Nix.
     flake-compat = {
-      url = "github:edolstra/flake-compat";
+      url = "github:NixOS/flake-compat";
       flake = false;
     };
 
