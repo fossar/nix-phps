@@ -1,0 +1,51 @@
+From 8b48b1c19b6705465008bc507b7078781da1bab3 Mon Sep 17 00:00:00 2001
+From: George Peter Banyard <girgias@php.net>
+Date: Wed, 12 May 2021 18:54:57 +0100
+Subject: [PATCH] Fix [-Wstrict-prototypes] warning in PCNTL extension
+
+To achieve this we need to introduce a new wrapper function with
+dummy arguments which calls pcntl_signal_dispatch() to respect
+the function pointer signature for a tick function.
+
+(cherry picked from commit 2068d230d981d7b06b41b87ebc37ab2581b79852)
+---
+ ext/pcntl/pcntl.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/ext/pcntl/pcntl.c b/ext/pcntl/pcntl.c
+index 561815f5cc5..904183cfc06 100644
+--- a/ext/pcntl/pcntl.c
++++ b/ext/pcntl/pcntl.c
+@@ -208,7 +208,8 @@ ZEND_GET_MODULE(pcntl)
+ #endif
+ 
+ static void pcntl_signal_handler(int);
+-static void pcntl_signal_dispatch();
++static void pcntl_signal_dispatch(void);
++static void pcntl_signal_dispatch_tick_function(int dummy_int, void *dummy_pointer);
+ 
+ void php_register_signal_constants(INIT_FUNC_ARGS)
+ {
+@@ -513,7 +514,7 @@ PHP_MINIT_FUNCTION(pcntl)
+ {
+ 	php_register_signal_constants(INIT_FUNC_ARGS_PASSTHRU);
+ 	php_pcntl_register_errno_constants(INIT_FUNC_ARGS_PASSTHRU);
+-	php_add_tick_function(pcntl_signal_dispatch, NULL);
++	php_add_tick_function(pcntl_signal_dispatch_tick_function, NULL);
+ 
+ 	return SUCCESS;
+ }
+@@ -1375,6 +1376,10 @@ void pcntl_signal_dispatch()
+ 	sigprocmask(SIG_SETMASK, &old_mask, NULL);
+ }
+ 
++static void pcntl_signal_dispatch_tick_function(int dummy_int, void *dummy_pointer)
++{
++	return pcntl_signal_dispatch();
++}
+ 
+ 
+ /*
+-- 
+2.52.0
+

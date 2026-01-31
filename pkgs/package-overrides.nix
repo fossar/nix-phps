@@ -731,6 +731,34 @@ in
       else
         prev.extensions.openswoole;
 
+    pcntl = prev.extensions.pcntl.overrideAttrs (attrs: {
+      patches =
+        let
+          upstreamPatches = attrs.patches or [ ];
+
+          ourPatches = lib.optionals (lib.versionOlder prev.php.version "8.1") [
+            # Fix compatibility with gcc 15
+            # https://github.com/php/php-src/commit/2068d230d981d7b06b41b87ebc37ab2581b79852
+            (
+              if lib.versionOlder prev.php.version "7.0" then
+                ./patches/php56-pcntl-strict-prototypes.patch
+              else if lib.versionOlder prev.php.version "7.1" then
+                ./patches/php70-pcntl-strict-prototypes.patch
+              else if lib.versionOlder prev.php.version "7.4" then
+                ./patches/php71-pcntl-strict-prototypes.patch
+              else if lib.versionOlder prev.php.version "8.0" then
+                ./patches/php74-pcntl-strict-prototypes.patch
+              else
+                (pkgs.fetchpatch {
+                  url = "https://github.com/php/php-src/commit/2068d230d981d7b06b41b87ebc37ab2581b79852.patch";
+                  hash = "sha256-lRXWNugOtP7fFpdS1bTBx0IFsgwnJQNoljyp//aqT+Y=";
+                })
+            )
+          ];
+        in
+        ourPatches ++ upstreamPatches;
+    });
+
     pcov =
       if lib.versionAtLeast prev.php.version "7.1" then
         prev.extensions.pcov
