@@ -11,7 +11,7 @@ let
 
   inherit (prev) lib;
 
-  inherit (import ./lib.nix { inherit lib; }) mergeEnv;
+  inherit (import ./lib.nix { inherit lib; }) appendStrings mergeEnv;
 
   inherit (prev.stdenv.cc) isClang;
 
@@ -116,6 +116,14 @@ let
               done
             ''
             + attrs.preConfigure;
+
+          postPatch = appendStrings attrs "postPatch" (
+            lib.optional (lib.versionAtLeast args.version "7.3" && lib.versionOlder args.version "7.4") ''
+              # Fix “too many arguments to function” error with gcc 15
+              substituteInPlace ext/date/php_date.c \
+                --replace-fail 'php_time(NULL)' 'php_time()'
+            ''
+          );
 
           env = mergeEnv attrs {
             NIX_CFLAGS_COMPILE =
