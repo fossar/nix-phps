@@ -5,8 +5,8 @@
 
 let
   base = mkPhp {
-    version = "8.1.33";
-    hash = "sha256-tlU0UYQcGlaYZdf9yDAkYh7kQ0zY+/6woxWIrJxwaF8=";
+    version = "8.1.34";
+    hash = "sha256-mOCgig+uN9CN/MovX/ZmSGMJfd5LHTYK8qzIw1QvKg8=";
   };
 in
 base.withExtensions (

@@ -180,17 +180,6 @@ in
                   # Patch rebased from https://github.com/php/php-src/commit/0a39890c967aa57225bb6bdf4821aff7a3a3c082
                   # Fix compilation errors with libxml2 2.12
                   ./patches/libxml-ext.patch
-                ]
-            ++
-              lib.optionals (lib.versionAtLeast prev.php.version "8.1" && lib.versionOlder prev.php.version "8.2")
-                [
-                  (pkgs.fetchpatch {
-                    url = "https://github.com/php/php-src/commit/d6e70e705323a50b616ffee9402245ab97de3e4e.patch";
-                    hash = "sha256-Axu09l3uQ83qe30aDsR+Bt29cJiF4mLknwDyQf94vic=";
-                    includes = [
-                      "ext/dom/tests/gh10234.phpt"
-                    ];
-                  })
                 ];
         in
         ourPatches ++ upstreamPatches;
