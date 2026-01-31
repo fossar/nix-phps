@@ -95,7 +95,7 @@ let
               # https://github.com/NixOS/nixpkgs/pull/90249
               for i in $(find . -type f -name "*.m4"); do
                 substituteInPlace $i \
-                  --replace 'test -x "$PKG_CONFIG"' 'type -P "$PKG_CONFIG" >/dev/null'
+                  --replace-quiet 'test -x "$PKG_CONFIG"' 'type -P "$PKG_CONFIG" >/dev/null'
               done
             ''
             + attrs.preConfigure;

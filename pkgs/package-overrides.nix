@@ -644,8 +644,8 @@ in
         attrs.preConfigure or ""
         + lib.optionalString (lib.versionOlder prev.php.version "7.4") ''
           substituteInPlace configure \
-            --replace '$OPENSSL_LIBDIR' '${pkgs.openssl}/lib' \
-            --replace '$OPENSSL_INCDIR' '${pkgs.openssl.dev}/include'
+            --replace-fail '$OPENSSL_LIBDIR' '${pkgs.openssl}/lib' \
+            --replace-fail '$OPENSSL_INCDIR' '${pkgs.openssl.dev}/include'
         '';
     });
 
