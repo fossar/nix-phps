@@ -509,12 +509,62 @@ in
         prev.extensions.maxminddb;
 
     mbstring = prev.extensions.mbstring.overrideAttrs (attrs: {
+      patches =
+        let
+          upstreamPatches = attrs.patches or [ ];
+
+          ourPatches =
+            lib.optionals (lib.versionOlder prev.php.version "7.2") [
+              # Upgrade to oniguruma 6 file layout.
+              (pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/2a76d2282ad26c757d42b5ce2d079dcff07ae9de.patch";
+                hash = "sha256-kq8VbPp6/urwo+m9yoRONoeASnWHWeQRvxdrdWUld84=";
+                includes = [ "ext/mbstring/config.m4" ];
+              })
+            ]
+            ++ lib.optionals (lib.versionOlder prev.php.version "7.1") [
+              # Fix build with oniguruma 6.8.1.
+              (
+                if lib.versionOlder prev.php.version "7.0" then
+                  ./patches/php56-mbstring-oniguruma-6.8.1.patch
+                else
+                  pkgs.fetchpatch {
+                    url = "https://github.com/php/php-src/commit/4072b2787074ee8e247a6639585b49e10c5a55fe.patch";
+                    hash = "sha256-nKlFJRA2l9Indp2cgOwyZ1SD+Li/z45b07aJzn6LWGI=";
+                    excludes = [ "NEWS" ];
+                  }
+              )
+            ];
+        in
+        ourPatches ++ upstreamPatches;
+
+      postPatch = appendStrings attrs "postPatch" (
+        lib.optional (lib.versionOlder prev.php.version "7.4") (
+          let
+            oniguruma = pkgs.fetchFromGitHub {
+              owner = "kkos";
+              repo = "oniguruma";
+              tag = "v6.9.10";
+              sha256 = "sha256-+vfVdBwNR432cYhYAciMNeNNH809axvulxEQP0WP5VI=";
+            };
+          in
+          ''
+            # Replace oniguruma with newer version.
+            # Fixes build with gcc 15.
+            rm -rf ext/mbstring/oniguruma
+            cp -r ${oniguruma} ext/mbstring/oniguruma
+            chmod -R +w ext/mbstring/oniguruma
+          ''
+        )
+
+      );
+
       env = mergeEnv attrs {
         NIX_CFLAGS_COMPILE =
           lib.optionals (lib.versionOlder prev.php.version "7.0") [
             "-Wno-implicit-function-declaration"
           ]
-          ++ lib.optionals (lib.versionOlder prev.php.version "7.0" && !isClang) [
+          ++ lib.optionals (lib.versionOlder prev.php.version "7.4" && !isClang) [
             "-Wno-incompatible-pointer-types"
           ];
       };
