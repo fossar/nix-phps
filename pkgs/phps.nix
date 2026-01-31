@@ -58,6 +58,23 @@ let
                   "build/libtool.m4"
                 ];
               })
+            ]
+            ++ lib.optionals (lib.versionOlder args.version "8.1") [
+              # Fix build with gcc 15
+              # https://github.com/php/php-src/commit/b7356692f69f4ac0a07ea54e83debdd04b426dcb
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/b7356692f69f4ac0a07ea54e83debdd04b426dcb.patch";
+                hash =
+                  if lib.versionOlder args.version "7.0" then
+                    "sha256-purcnjRI1Tc0PeCsAwyWgaa4qBSBXAHDCIckavuhiYg="
+                  else
+                    "sha256-k1Gao8+zwwydyFQDBtg2SJ/ORsyilSHkb8JhvKiFF8Q=";
+                decode =
+                  if lib.versionOlder args.version "7.0" then
+                    "sed 's/zend_long/long/;s/ZEND_STRTOL_PTR/strtol/;s/ZEND_STRTOUL_PTR/strtoul/'"
+                  else
+                    "cat";
+              })
             ];
 
           configureFlags =
