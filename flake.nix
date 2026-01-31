@@ -51,6 +51,7 @@
             php82
             php83
             php84
+            php85
             ;
         };
 
