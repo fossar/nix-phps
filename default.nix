@@ -10,5 +10,6 @@ let
   flake = import flake-compat {
     src = ./.;
   };
+  default = flake.defaultNix;
 in
-flake.defaultNix
+default // default.packages.${builtins.currentSystem}
