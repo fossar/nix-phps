@@ -27,8 +27,8 @@ The following versions are currently available:
 - `php73` **INSECURE!**
 - `php74` **INSECURE!**
 - `php80` **INSECURE!**
-- `php81` **SUPPORT ENDS 2025**
-- `php82`
+- `php81` **INSECURE!**
+- `php82` **SUPPORT ENDS 2026**
 - `php83`
 - `php84`
 
