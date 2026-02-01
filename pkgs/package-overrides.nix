@@ -20,7 +20,7 @@ let
 
   inherit (pkgs.stdenv.cc) isClang;
 
-  inherit (import ./lib.nix { inherit lib; }) mergeEnv removeLines;
+  inherit (import ./lib.nix { inherit lib; }) appendStrings mergeEnv removeLines;
 in
 {
   buildPecl =
@@ -210,31 +210,26 @@ in
       # Tests fail on Darwin for some reason.
       doCheck = lib.versionOlder prev.php.version "7.4" -> pkgs.stdenv.isLinux;
 
-      postPatch = lib.concatStringsSep "\n" [
-        (attrs.postPatch or "")
-
-        (lib.optionalString
-          (lib.versionAtLeast prev.php.version "7.3" && lib.versionOlder prev.php.version "7.4")
+      postPatch = appendStrings attrs "postPatch" (
+        lib.optional (lib.versionAtLeast prev.php.version "7.3" && lib.versionOlder prev.php.version "7.4")
           ''
             # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
             rm ext/dom/tests/bug80268.phpt
           ''
-        )
 
-        (lib.optionalString (lib.versionOlder prev.php.version "7.4") ''
+        ++ lib.optional (lib.versionOlder prev.php.version "7.4") ''
           # 4cc261aa6afca2190b1b74de39c3caa462ec6f0b deletes this file but fetchpatch does not support deletions.
           rm ext/dom/tests/bug43364.phpt
-        '')
+        ''
 
-        (lib.optionalString
-          (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "8.1")
-          ''
-            # Removing tests failing with libxml2 (2.11.4) > 2.10.4
-            rm ext/dom/tests/DOMDocument_loadXML_error2.phpt
-            rm ext/dom/tests/DOMDocument_load_error2.phpt
-          ''
-        )
-      ];
+        ++
+          lib.optional (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "8.1")
+            ''
+              # Removing tests failing with libxml2 (2.11.4) > 2.10.4
+              rm ext/dom/tests/DOMDocument_loadXML_error2.phpt
+              rm ext/dom/tests/DOMDocument_load_error2.phpt
+            ''
+      );
 
       env = mergeEnv attrs {
         NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.1") [
@@ -351,20 +346,20 @@ in
               })
             ];
 
-      postPatch =
-        attrs.postPatch or ""
-        +
-          lib.optionalString
-            (
-              lib.versionAtLeast prev.php.version "7.1"
-              && lib.versionOlder prev.php.version "8.0"
-              && pkgs.stdenv.isDarwin
-            )
-            ''
-              # Disable test failing on Darwin (see 9999a0cb757344974889a6f548727de6f2c3c10d above)
-              # We do not apply the fix because passing category to `dcgettext`/`dcngettext` functions should be rare.
-              rm ext/gettext/tests/dcngettext.phpt
-            '';
+      postPatch = appendStrings attrs "postPatch" (
+        lib.optional
+          (
+            lib.versionAtLeast prev.php.version "7.1"
+            && lib.versionOlder prev.php.version "8.0"
+            && pkgs.stdenv.isDarwin
+          )
+          ''
+            # Disable test failing on Darwin (see 9999a0cb757344974889a6f548727de6f2c3c10d above)
+            # We do not apply the fix because passing category to `dcgettext`/`dcngettext` functions should be rare.
+            rm ext/gettext/tests/dcngettext.phpt
+          ''
+
+      );
     });
 
     grpc =
@@ -633,20 +628,21 @@ in
           ./patches/mysqlnd_fix_compression.patch
         ];
 
-      postPatch =
-        attrs.postPatch or ""
-        + lib.optionalString (lib.versionOlder prev.php.version "7.1") ''
+      postPatch = appendStrings attrs "postPatch" (
+        lib.optional (lib.versionOlder prev.php.version "7.1") ''
           # Fix mysqlnd not being able to find headers.
           ln -s $PWD/ext/ ext/mysqlnd
-        '';
+        ''
 
-      preConfigure =
-        attrs.preConfigure or ""
-        + lib.optionalString (lib.versionOlder prev.php.version "7.4") ''
+      );
+
+      preConfigure = appendStrings attrs "preConfigure" (
+        lib.optional (lib.versionOlder prev.php.version "7.4") ''
           substituteInPlace configure \
             --replace-fail '$OPENSSL_LIBDIR' '${pkgs.openssl}/lib' \
             --replace-fail '$OPENSSL_INCDIR' '${pkgs.openssl.dev}/include'
-        '';
+        ''
+      );
     });
 
     oci8 =
@@ -902,20 +898,18 @@ in
       # Tests fail on Darwin with older PHP versions for some reason.
       doCheck = attrs.doCheck or true && (lib.versionOlder prev.php.version "7.4" -> pkgs.stdenv.isLinux);
 
-      postPatch =
-        attrs.postPatch or ""
-        +
-          lib.optionalString
-            (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "7.4")
-            ''
-              rm ext/soap/tests/bugs/bug66112.phpt
-            ''
-        +
-          lib.optionalString
-            (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "7.2")
+      postPatch = appendStrings attrs "postPatch" (
+        lib.optional (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "7.4")
+          ''
+            rm ext/soap/tests/bugs/bug66112.phpt
+          ''
+
+        ++
+          lib.optional (lib.versionAtLeast prev.php.version "7.1" && lib.versionOlder prev.php.version "7.2")
             ''
               rm ext/soap/tests/bugs/bug76348.phpt
-            '';
+            ''
+      );
     });
 
     sqlite3 = prev.extensions.sqlite3.overrideAttrs (attrs: {

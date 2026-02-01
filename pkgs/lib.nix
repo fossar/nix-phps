@@ -70,4 +70,22 @@
       extraEnvsConcatenated = lib.mapAttrs appendEnvVar applicableExtraEnvs;
     in
     oldEnv // extraEnvsConcatenated;
+
+  /*
+    Extends a string attribute `attrs.${attr}` with strings in `extraStrings`.
+
+    The original value and all the `extraStrings` will be separated with new lines.
+
+    If the attribute is unset and no `extraStrings` are provided, `null` will be returned.
+
+    Type: appendStrings :: drvAttrs -> string -> array<string> -> string|null
+  */
+  appendStrings =
+    attrs: attr: extraStrings:
+
+    let
+      strings = lib.optionals (builtins.hasAttr attr attrs) [ attrs.${attr} ] ++ extraStrings;
+    in
+
+    if strings == [ ] then null else lib.concatStringsSep "\n" strings;
 }
