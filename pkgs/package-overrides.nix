@@ -124,12 +124,7 @@ in
     dom = prev.extensions.dom.overrideAttrs (attrs: {
       patches =
         let
-          upstreamPatches = builtins.filter (
-            patch:
-            # The patch does not apply on PHP < 8.2
-            patchName patch == "d6e70e705323a50b616ffee9402245ab97de3e4e.patch"
-            -> lib.versionAtLeast prev.php.version "8.2"
-          ) (attrs.patches or [ ]);
+          upstreamPatches = attrs.patches or [ ];
 
           ourPatches =
             lib.optionals (lib.versionOlder prev.php.version "7.2") [
