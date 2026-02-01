@@ -1098,10 +1098,19 @@ in
         prev.extensions.xdebug.overrideAttrs (attrs: {
           name = "xdebug-3.1.6";
           version = "3.1.6";
+
           src = pkgs.fetchurl {
             url = "http://pecl.php.net/get/xdebug-3.1.6.tgz";
             sha256 = "1lnmrb5kgq8lbhjs48j3wwhqgk44pnqb1yjq4b5r6ysv9l5wlkjm";
           };
+
+          patches = [
+            # Fix build with gcc 15.
+            (pkgs.fetchpatch {
+              url = "https://github.com/xdebug/xdebug/commit/eae1b06aeb67cd609883e0e56499c7b6f8aa2b36.patch";
+              hash = "sha256-PsGKuvVXaJnGhOinCiBZro/nIcBMjNYD4xWouV6NJus=";
+            })
+          ];
         })
       else if lib.versionAtLeast prev.php.version "7.1" then
         prev.extensions.xdebug.overrideAttrs (attrs: {
