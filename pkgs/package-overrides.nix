@@ -289,6 +289,21 @@ in
         prev.mkExtension {
           name = "gd";
 
+          patches = [
+            # Fix build with gcc 15
+            # https://github.com/php/php-src/commit/f566cba0bb6bd53b1d44d5097e68201412b00f7a
+            (
+              if lib.versionOlder prev.php.version "7.0" then
+                ./patches/php56-gd-strict-prototypes.patch
+              else if lib.versionOlder prev.php.version "7.2" then
+                ./patches/php70-gd-strict-prototypes.patch
+              else if lib.versionOlder prev.php.version "7.3" then
+                ./patches/php72-gd-strict-prototypes.patch
+              else
+                ./patches/php73-gd-strict-prototypes.patch
+            )
+          ];
+
           buildInputs = [
             pkgs.gd
             pkgs.xorg.libXpm
@@ -312,7 +327,24 @@ in
           doCheck = false;
         }
       else
-        prev.extensions.gd;
+        prev.extensions.gd.overrideAttrs (attrs: {
+          patches =
+            let
+              upstreamPatches = attrs.patches or [ ];
+
+              ourPatches = lib.optionals (lib.versionOlder prev.php.version "8.1") [
+                # Fix build with gcc 15
+                # https://github.com/php/php-src/commit/f566cba0bb6bd53b1d44d5097e68201412b00f7a
+                (
+                  if lib.versionOlder prev.php.version "8.0" then
+                    ./patches/php74-gd-strict-prototypes.patch
+                  else
+                    ./patches/php80-gd-strict-prototypes.patch
+                )
+              ];
+            in
+            ourPatches ++ upstreamPatches;
+        });
 
     gettext = prev.extensions.gettext.overrideAttrs (attrs: {
       patches =

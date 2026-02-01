@@ -1,0 +1,311 @@
+From aa119d8f59ba82955a0365e29401641fd93c599a Mon Sep 17 00:00:00 2001
+From: Remi Collet <remi@php.net>
+Date: Thu, 25 Nov 2021 13:16:26 +0100
+Subject: [PATCH] fix [-Wstrict-prototypes] build warnings in ext/gd
+
+(cherry picked from commit f566cba0bb6bd53b1d44d5097e68201412b00f7a)
+
+Jan Tojnar: Had to resolve some conflicts and remove `f` argument from `gdImagePngCtxEx` as in e713890d369499ab896e926b099fca244980cf0e. And remove `PHP_GDIMG_TYPE_JPG` and `PHP_GDIMG_TYPE_WBM` cases as in 345a75f5419c5ec37086ede199a1a8b9623ff407.
+---
+ ext/gd/gd.c     | 77 +++++++++++++++++--------------------------------
+ ext/gd/gd_ctx.c | 18 +++++++-----
+ 2 files changed, 36 insertions(+), 59 deletions(-)
+
+diff --git a/ext/gd/gd.c b/ext/gd/gd.c
+index 291e4e68594..10ce3d3d7ae 100644
+--- a/ext/gd/gd.c
++++ b/ext/gd/gd.c
+@@ -132,9 +132,9 @@ static void php_image_filter_smooth(INTERNAL_FUNCTION_PARAMETERS);
+ static void php_image_filter_pixelate(INTERNAL_FUNCTION_PARAMETERS);
+ 
+ /* End Section filters declarations */
+-static gdImagePtr _php_image_create_from_string (zval *Data, char *tn, gdImagePtr (*ioctx_func_p)());
+-static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn, gdImagePtr (*func_p)(), gdImagePtr (*ioctx_func_p)());
+-static void _php_image_output(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn, void (*func_p)());
++static gdImagePtr _php_image_create_from_string (zval *Data, char *tn, gdImagePtr (*ioctx_func_p)(gdIOCtxPtr));
++static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn, gdImagePtr (*func_p)(FILE *), gdImagePtr (*ioctx_func_p)(gdIOCtxPtr));
++static void _php_image_output(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn);
+ static int _php_image_type(char data[8]);
+ static void _php_image_convert(INTERNAL_FUNCTION_PARAMETERS, int image_type);
+ static void _php_image_bw_convert(gdImagePtr im_org, gdIOCtx *out, int threshold);
+@@ -2222,7 +2222,7 @@ static int _php_image_type (char data[8])
+ 
+ /* {{{ _php_image_create_from_string
+  */
+-gdImagePtr _php_image_create_from_string(zval *data, char *tn, gdImagePtr (*ioctx_func_p)())
++gdImagePtr _php_image_create_from_string(zval *data, char *tn, gdImagePtr (*ioctx_func_p)(gdIOCtxPtr))
+ {
+ 	gdImagePtr im;
+ 	gdIOCtx *io_ctx;
+@@ -2316,7 +2316,7 @@ PHP_FUNCTION(imagecreatefromstring)
+ 
+ /* {{{ _php_image_create_from
+  */
+-static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn, gdImagePtr (*func_p)(), gdImagePtr (*ioctx_func_p)())
++static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn, gdImagePtr (*func_p)(FILE *), gdImagePtr (*ioctx_func_p)(gdIOCtxPtr))
+ {
+ 	char *file;
+ 	size_t file_len;
+@@ -2353,7 +2353,7 @@ static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type,
+ 		if (FAILURE == php_stream_cast(stream, PHP_STREAM_AS_STDIO, (void**)&fp, REPORT_ERRORS)) {
+ 			goto out_err;
+ 		}
+-	} else if (ioctx_func_p) {
++	} else if (ioctx_func_p || image_type == PHP_GDIMG_TYPE_GD2PART) {
+ 		/* we can create an io context */
+ 		gdIOCtx* io_ctx;
+ 		zend_string *buff;
+@@ -2377,7 +2377,7 @@ static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type,
+ 		}
+ 
+ 		if (image_type == PHP_GDIMG_TYPE_GD2PART) {
+-			im = (*ioctx_func_p)(io_ctx, srcx, srcy, width, height);
++			im = gdImageCreateFromGd2PartCtx(io_ctx, srcx, srcy, width, height);
+ 		} else {
+ 			im = (*ioctx_func_p)(io_ctx);
+ 		}
+@@ -2395,7 +2395,7 @@ static void _php_image_create_from(INTERNAL_FUNCTION_PARAMETERS, int image_type,
+ 	if (!im && fp) {
+ 		switch (image_type) {
+ 			case PHP_GDIMG_TYPE_GD2PART:
+-				im = (*func_p)(fp, srcx, srcy, width, height);
++				im = gdImageCreateFromGd2Part(fp, srcx, srcy, width, height);
+ 				break;
+ #if defined(HAVE_GD_XPM)
+ 			case PHP_GDIMG_TYPE_XPM:
+@@ -2484,7 +2484,7 @@ PHP_FUNCTION(imagecreatefromxbm)
+    Create a new image from XPM file or URL */
+ PHP_FUNCTION(imagecreatefromxpm)
+ {
+-	_php_image_create_from(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_XPM, "XPM", gdImageCreateFromXpm, NULL);
++	_php_image_create_from(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_XPM, "XPM", NULL, NULL);
+ }
+ /* }}} */
+ #endif
+@@ -2517,13 +2517,13 @@ PHP_FUNCTION(imagecreatefromgd2)
+    Create a new image from a given part of GD2 file or URL */
+ PHP_FUNCTION(imagecreatefromgd2part)
+ {
+-	_php_image_create_from(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GD2PART, "GD2", gdImageCreateFromGd2Part, gdImageCreateFromGd2PartCtx);
++	_php_image_create_from(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GD2PART, "GD2", NULL, NULL);
+ }
+ /* }}} */
+ 
+ /* {{{ _php_image_output
+  */
+-static void _php_image_output(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn, void (*func_p)())
++static void _php_image_output(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn)
+ {
+ 	zval *imgind;
+ 	char *file = NULL;
+@@ -2576,33 +2576,20 @@ static void _php_image_output(INTERNAL_FUNCTION_PARAMETERS, int image_type, char
+ 				}
+ 				gdImageWBMP(im, q, fp);
+ 				break;
+-			case PHP_GDIMG_TYPE_JPG:
+-				(*func_p)(im, fp, q);
+-				break;
+-			case PHP_GDIMG_TYPE_WBM:
+-				for (i = 0; i < gdImageColorsTotal(im); i++) {
+-					if (gdImageRed(im, i) == 0) break;
+-				}
+-				(*func_p)(im, i, fp);
+-				break;
+ 			case PHP_GDIMG_TYPE_GD:
+ 				if (im->trueColor){
+ 					gdImageTrueColorToPalette(im,1,256);
+ 				}
+-				(*func_p)(im, fp);
++				gdImageGd(im, fp);
+ 				break;
+ 			case PHP_GDIMG_TYPE_GD2:
+ 				if (q == -1) {
+ 					q = 128;
+ 				}
+-				(*func_p)(im, fp, q, t);
++				gdImageGd2(im, fp, q, t);
+ 				break;
+ 			default:
+-				if (q == -1) {
+-					q = 128;
+-				}
+-				(*func_p)(im, fp, q, t);
+-				break;
++				ZEND_ASSERT(0);
+ 		}
+ 		fflush(fp);
+ 		fclose(fp);
+@@ -2628,32 +2615,20 @@ static void _php_image_output(INTERNAL_FUNCTION_PARAMETERS, int image_type, char
+   				}
+ 				gdImageWBMP(im, q, tmp);
+ 				break;
+-			case PHP_GDIMG_TYPE_JPG:
+-				(*func_p)(im, tmp, q);
+-				break;
+-			case PHP_GDIMG_TYPE_WBM:
+-				for (i = 0; i < gdImageColorsTotal(im); i++) {
+-					if (gdImageRed(im, i) == 0) {
+-						break;
+-					}
+-				}
+-				(*func_p)(im, q, tmp);
+-				break;
+ 			case PHP_GDIMG_TYPE_GD:
+ 				if (im->trueColor) {
+ 					gdImageTrueColorToPalette(im,1,256);
+ 				}
+-				(*func_p)(im, tmp);
++				gdImageGd(im, tmp);
+ 				break;
+ 			case PHP_GDIMG_TYPE_GD2:
+ 				if (q == -1) {
+ 					q = 128;
+ 				}
+-				(*func_p)(im, tmp, q, t);
++				gdImageGd2(im, tmp, q, t);
+ 				break;
+ 			default:
+-				(*func_p)(im, tmp);
+-				break;
++				ZEND_ASSERT(0);
+ 		}
+ 
+ 		fseek(tmp, 0, SEEK_SET);
+@@ -2680,7 +2655,7 @@ static void _php_image_output(INTERNAL_FUNCTION_PARAMETERS, int image_type, char
+    Output XBM image to browser or file */
+ PHP_FUNCTION(imagexbm)
+ {
+-	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_XBM, "XBM", gdImageXbmCtx);
++	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_XBM, "XBM");
+ }
+ /* }}} */
+ 
+@@ -2688,7 +2663,7 @@ PHP_FUNCTION(imagexbm)
+    Output GIF image to browser or file */
+ PHP_FUNCTION(imagegif)
+ {
+-	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GIF, "GIF", gdImageGifCtx);
++	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GIF, "GIF");
+ }
+ /* }}} */
+ 
+@@ -2697,7 +2672,7 @@ PHP_FUNCTION(imagegif)
+    Output PNG image to browser or file */
+ PHP_FUNCTION(imagepng)
+ {
+-	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_PNG, "PNG", gdImagePngCtxEx);
++	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_PNG, "PNG");
+ }
+ /* }}} */
+ #endif /* HAVE_GD_PNG */
+@@ -2708,7 +2683,7 @@ PHP_FUNCTION(imagepng)
+    Output WEBP image to browser or file */
+ PHP_FUNCTION(imagewebp)
+ {
+-	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_WEBP, "WEBP", gdImageWebpCtx);
++	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_WEBP, "WEBP");
+ }
+ /* }}} */
+ #endif /* HAVE_GD_WEBP */
+@@ -2719,7 +2694,7 @@ PHP_FUNCTION(imagewebp)
+    Output JPEG image to browser or file */
+ PHP_FUNCTION(imagejpeg)
+ {
+-	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_JPG, "JPEG", gdImageJpegCtx);
++	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_JPG, "JPEG");
+ }
+ /* }}} */
+ #endif /* HAVE_GD_JPG */
+@@ -2728,7 +2703,7 @@ PHP_FUNCTION(imagejpeg)
+    Output WBMP image to browser or file */
+ PHP_FUNCTION(imagewbmp)
+ {
+-	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_WBM, "WBMP", gdImageWBMPCtx);
++	_php_image_output_ctx(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_WBM, "WBMP");
+ }
+ /* }}} */
+ 
+@@ -2736,7 +2711,7 @@ PHP_FUNCTION(imagewbmp)
+    Output GD image to browser or file */
+ PHP_FUNCTION(imagegd)
+ {
+-	_php_image_output(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GD, "GD", gdImageGd);
++	_php_image_output(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GD, "GD");
+ }
+ /* }}} */
+ 
+@@ -2744,7 +2719,7 @@ PHP_FUNCTION(imagegd)
+    Output GD2 image to browser or file */
+ PHP_FUNCTION(imagegd2)
+ {
+-	_php_image_output(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GD2, "GD2", gdImageGd2);
++	_php_image_output(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_TYPE_GD2, "GD2");
+ }
+ /* }}} */
+ 
+@@ -3944,7 +3919,7 @@ static void php_imagettftext_common(INTERNAL_FUNCTION_PARAMETERS, int mode, int
+    Output WBMP image to browser or file */
+ PHP_FUNCTION(image2wbmp)
+ {
+-	_php_image_output(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_CONVERT_WBM, "WBMP", _php_image_bw_convert);
++	_php_image_output(INTERNAL_FUNCTION_PARAM_PASSTHRU, PHP_GDIMG_CONVERT_WBM, "WBMP");
+ }
+ /* }}} */
+ 
+diff --git a/ext/gd/gd_ctx.c b/ext/gd/gd_ctx.c
+index 922a19ddcb6..314e99bb207 100644
+--- a/ext/gd/gd_ctx.c
++++ b/ext/gd/gd_ctx.c
+@@ -79,7 +79,7 @@ static void _php_image_stream_ctxfreeandclose(struct gdIOCtx *ctx) /* {{{ */
+ } /* }}} */
+ 
+ /* {{{ _php_image_output_ctx */
+-static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn, void (*func_p)())
++static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type, char *tn)
+ {
+ 	zval *imgind;
+ 	char *file = NULL;
+@@ -182,16 +182,16 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type,
+ 				php_error_docref(NULL, E_WARNING, "Invalid threshold value '%d'. It must be between 0 and 255", q);
+ 			}
+ 		case PHP_GDIMG_TYPE_JPG:
+-			(*func_p)(im, ctx, q);
++			gdImageJpegCtx(im, ctx, q);
+ 			break;
+ 		case PHP_GDIMG_TYPE_WEBP:
+ 			if (q == -1) {
+ 				q = 80;
+ 			}
+-			(*func_p)(im, ctx, q);
++			gdImageWebpCtx(im, ctx, q);
+ 			break;
+ 		case PHP_GDIMG_TYPE_PNG:
+-			(*func_p)(im, ctx, q, f);
++			gdImagePngCtxEx(im, ctx, q);
+ 			break;
+ 		case PHP_GDIMG_TYPE_XBM:
+ 		case PHP_GDIMG_TYPE_WBM:
+@@ -202,14 +202,16 @@ static void _php_image_output_ctx(INTERNAL_FUNCTION_PARAMETERS, int image_type,
+ 				q = i;
+ 			}
+ 			if (image_type == PHP_GDIMG_TYPE_XBM) {
+-				(*func_p)(im, file ? file : "", q, ctx);
++				gdImageXbmCtx(im, file ? file : "", q, ctx);
+ 			} else {
+-				(*func_p)(im, q, ctx);
++				gdImageWBMPCtx(im, q, ctx);
+ 			}
+ 			break;
+-		default:
+-			(*func_p)(im, ctx);
++		case PHP_GDIMG_TYPE_GIF:
++			gdImageGifCtx(im, ctx);
+ 			break;
++		default:
++			ZEND_ASSERT(0);
+ 	}
+ 
+ 	ctx->gd_free(ctx);
+-- 
+2.52.0
+
