@@ -290,7 +290,7 @@ in
 
           buildInputs = [
             pkgs.gd
-            pkgs.xorg.libXpm
+            pkgs.libXpm
             # Older versions of PHP check for these libraries even when not using bundled gd.
             pkgs.zlib
             pkgs.libjpeg
@@ -303,7 +303,7 @@ in
             "--with-jpeg-dir=${pkgs.libjpeg.dev}"
             "--with-png-dir=${pkgs.libpng.dev}"
             "--with-webp-dir=${pkgs.libwebp}"
-            "--with-xpm-dir=${pkgs.xorg.libXpm.dev}"
+            "--with-xpm-dir=${pkgs.libXpm.dev}"
             "--with-zlib-dir=${pkgs.zlib.dev}"
             "--enable-gd-jis-conv"
           ];
