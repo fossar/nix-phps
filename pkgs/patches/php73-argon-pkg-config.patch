@@ -1,0 +1,72 @@
+From 9a0df2eef1d1201ea62f1a55323c841a2493bdc1 Mon Sep 17 00:00:00 2001
+From: Jan Tojnar <jtojnar@gmail.com>
+Date: Tue, 24 Nov 2020 11:46:03 +0100
+Subject: [PATCH] Use pkg-config for libargon2
+
+Backporting 9df6a1e4dd84a39bfaec70d7d008b61f7bbae347 for argon and 7965bc3656eff9753f45037b2d343017855591ee without the benefit of 446fcfc017250d543919c86dfb126e9580bd260c.
+---
+ ext/standard/config.m4 | 42 +++++++++++++++++-------------------------
+ 1 file changed, 17 insertions(+), 25 deletions(-)
+
+diff --git a/ext/standard/config.m4 b/ext/standard/config.m4
+index 5637d374dbd..d074c807f40 100644
+--- a/ext/standard/config.m4
++++ b/ext/standard/config.m4
+@@ -418,37 +418,29 @@ dnl Check for arc4random on BSD systems
+ dnl
+ AC_CHECK_DECLS([arc4random_buf])
+ 
++AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
++
+ dnl
+ dnl Check for argon2
+ dnl
+-PHP_ARG_WITH(password-argon2, for Argon2 support,
+-[  --with-password-argon2[=DIR]
+-                          Include Argon2 support in password_*. DIR is the Argon2 shared library path])
++PHP_ARG_WITH([password-argon2],
++  [for Argon2 support],
++  [AS_HELP_STRING([[--with-password-argon2]],
++    [Include Argon2 support in password_*])])
+ 
+ if test "$PHP_PASSWORD_ARGON2" != "no"; then
+-  AC_MSG_CHECKING([for Argon2 library])
+-  for i in $PHP_PASSWORD_ARGON2 /usr /usr/local ; do
+-    if test -r $i/include/argon2.h; then
+-      ARGON2_DIR=$i;
+-      AC_MSG_RESULT(found in $i)
+-      break
+-    fi
+-  done
+-
+-  if test -z "$ARGON2_DIR"; then
+-    AC_MSG_RESULT([not found])
+-    AC_MSG_ERROR([Please ensure the argon2 header and library are installed])
++  AC_MSG_CHECKING([for libargon2])
++
++  if test -x "$PKG_CONFIG" && $PKG_CONFIG --exists libargon2; then
++    ARGON2_VERSION=`$PKG_CONFIG libargon2 --modversion`
++    ARGON2_CFLAGS=`$PKG_CONFIG libargon2 --cflags`
++    ARGON2_LIBS=`$PKG_CONFIG libargon2 --libs`
++    AC_MSG_RESULT(version $ARGON2_VERSION found using pkg-config)
++    PHP_EVAL_LIBLINE($ARGON2_LIBS)
++    PHP_EVAL_INCLINE($ARGON2_CFLAGS)
++  else
++    AC_MSG_ERROR([Please install libargon2])
+   fi
+-
+-  PHP_ADD_LIBRARY_WITH_PATH(argon2, $ARGON2_DIR/$PHP_LIBDIR)
+-  PHP_ADD_INCLUDE($ARGON2_DIR/include)
+-
+-  AC_CHECK_LIB(argon2, argon2id_hash_raw, [
+-    LIBS="$LIBS -largon2"
+-    AC_DEFINE(HAVE_ARGON2LIB, 1, [ Define to 1 if you have the <argon2.h> header file ])
+-  ], [
+-    AC_MSG_ERROR([Problem with libargon2.(a|so). Please verify that Argon2 header and libaries >= 20161029 are installed])
+-  ])
+ fi
+ 
+ dnl
+-- 
+2.53.0
+

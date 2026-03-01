@@ -75,6 +75,24 @@ let
                   else
                     "cat";
               })
+            ]
+            ++ lib.optionals (lib.versionOlder args.version "8.1" && lib.versionAtLeast args.version "7.2") [
+              # Fix build with multiple-output libargon2
+              # https://github.com/php/php-src/commit/7965bc3656eff9753f45037b2d343017855591ee
+              (
+                if lib.versionOlder args.version "7.3" then
+                  ./patches/php72-argon-pkg-config.patch
+                else if lib.versionOlder args.version "7.4" then
+                  ./patches/php73-argon-pkg-config.patch
+                else
+                  prev.pkgs.fetchpatch {
+                    url = "https://github.com/php/php-src/commit/7965bc3656eff9753f45037b2d343017855591ee.patch";
+                    hash = "sha256-sE7b2XUFXgwA8sXcd+TGSAJE/Y9yXWZpeDi5eSwWBjs=";
+                    includes = [
+                      "ext/standard/config.m4"
+                    ];
+                  }
+              )
             ];
 
           configureFlags =
