@@ -96,6 +96,19 @@ let
                     ];
                   }
               )
+            ]
+            ++ lib.optionals (lib.versionOlder args.version "8.2") [
+              # Fix build with clang 21
+              # https://github.com/php/php-src/commit/04f5da4b772a9d2320e151796a13d800695d3ee5
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/04f5da4b772a9d2320e151796a13d800695d3ee5.patch";
+                hash =
+                  if lib.versionOlder args.version "7.1" then
+                    "sha256-mgjlg+8VosOpObBzflidnFRvI8q/ZIhR4YB1RGixDfg="
+                  else
+                    "sha256-ppLh0LSSEasIF5qL910luXKE7AB2Y33FMOVu5SFir2o=";
+                decode = if lib.versionOlder args.version "7.1" then "sed 's/uint32_t/php_uint32/'" else "cat";
+              })
             ];
 
           configureFlags =
