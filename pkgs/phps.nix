@@ -42,6 +42,15 @@ let
               # Patch to make it build with autoconf >= 2.72
               # Source: https://aur.archlinux.org/packages/php56-ldap?all_deps=1#comment-954506
               ./patches/php56-autoconf.patch
+
+              # Remove trailing spaces to allow later patches to apply.
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/b7a7b1a624c97945c0aaa49d46ae996fc0bdb6bc.patch";
+                hash = "sha256-seoHNu+8YxyxFRb1MZC2MJEr8n64KvrPs8FtPTjuNJQ=";
+                includes = [
+                  "main/reentrancy.c"
+                ];
+              })
             ]
             ++ lib.optionals (lib.versions.majorMinor args.version == "7.2") [
               # Building the bundled intl extension fails on Mac OS.
@@ -60,6 +69,27 @@ let
                 includes = [
                   "build/libtool.m4"
                 ];
+              })
+
+              # Fix build with clang 21
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/2b28f7189144a21e753dbc09efadd571121a82b9.patch";
+                hash =
+                  if lib.versionOlder args.version "7.0" then
+                    "sha256-wajJHBRRi9yvyAiA3ZlOQyn0Xk70U57l4n5TbU8KLxU="
+                  else if lib.versionOlder args.version "7.3" then
+                    "sha256-neYqTfeTkT+LUqEv8cwTL09EJndQb48suLbVRbbalto="
+                  else
+                    "sha256-VJBhSc+cta12RcCK42HLhrhEFEpHaN5Rwy/acAGTAsQ=";
+                excludes = [
+                  "acinclude.m4"
+                  "win32/readdir.c"
+                ];
+                decode =
+                  if lib.versionOlder args.version "7.3" then
+                    "sed '/int php_scandir/,/size_t/s//int/;/php_gmtime_r/,/#endif/s~~#endif /* BEOS */~${lib.optionalString (lib.versionOlder args.version "7.0") ";s/zend_long maxlifetime/int maxlifetime TSRMLS_DC/;s/zend_stat_t/struct stat/"}'"
+                  else
+                    "cat";
               })
             ]
             ++ lib.optionals (lib.versionOlder args.version "8.1") [

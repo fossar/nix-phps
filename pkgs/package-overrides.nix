@@ -946,6 +946,7 @@ in
         throw "php.extensions.relay requires PHP version >= 8.0.";
 
     session = prev.extensions.session.overrideAttrs (attrs: {
+      patches = lib.optionals (lib.versionOlder prev.php.version "7.4") prev.php.unwrapped.patches;
       env = mergeEnv attrs {
         NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.0") [
           "-Wno-incompatible-pointer-types"
