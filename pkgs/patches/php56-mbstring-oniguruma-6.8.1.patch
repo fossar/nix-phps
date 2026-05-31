@@ -10,6 +10,10 @@ is no need to, since there are respective accessor functions available
 at least of 2.3.1.
 
 (cherry picked from commit 4072b2787074ee8e247a6639585b49e10c5a55fe)
+
+Since the codebase we apply this to precedes
+https://github.com/php/php-src/commit/9011a70c7f83ce5fc70ac9b6aef523ddda9e84fa
+we need to retain the dereferencing.
 ---
  ext/mbstring/php_mbregex.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -23,7 +27,7 @@ index a1cabb164b8..2e8baa1c3a4 100644
  
  	found = zend_hash_find(&MBREX(ht_rc), (char *)pattern, patlen+1, (void **) &rc);
 -	if (found == FAILURE || (*rc)->options != options || (*rc)->enc != enc || (*rc)->syntax != syntax) {
-+	if (found == FAILURE || onig_get_options(rc) != options || onig_get_encoding(rc) != enc || onig_get_syntax(rc) != syntax) {
++	if (found == FAILURE || onig_get_options(*rc) != options || onig_get_encoding(*rc) != enc || onig_get_syntax(*rc) != syntax) {
  		if ((err_code = onig_new(&retval, (OnigUChar *)pattern, (OnigUChar *)(pattern + patlen), options, enc, syntax, &err_info)) != ONIG_NORMAL) {
  			onig_error_code_to_str(err_str, err_code, &err_info);
  			php_error_docref(NULL TSRMLS_CC, E_WARNING, "mbregex compile err: %s", err_str);
