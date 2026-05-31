@@ -46,12 +46,40 @@ let
               # Fix build with Clang 21
               ./patches/php56-ext-ereg-Avoid-K-R-style-function-declarations.patch
 
+              # Fix build of C++ extensions with Clang 21
+              # This should be handled by the following patch but zend_hash.h and zend_string.h
+              # do not apply cleanly.
+              # https://github.com/php/php-src/commit/af66ad28571fc3d55c33bd3b301a5508192bcdac
+              ./patches/php56-headers-no-register.patch
+
               # Remove trailing spaces to allow later patches to apply.
               (prev.pkgs.fetchpatch {
                 url = "https://github.com/php/php-src/commit/b7a7b1a624c97945c0aaa49d46ae996fc0bdb6bc.patch";
                 hash = "sha256-seoHNu+8YxyxFRb1MZC2MJEr8n64KvrPs8FtPTjuNJQ=";
                 includes = [
                   "main/reentrancy.c"
+                ];
+              })
+            ]
+            ++ lib.optionals (lib.versionOlder args.version "7.1") [
+              # Building the bundled intl extension fails with Clang 21
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/af66ad28571fc3d55c33bd3b301a5508192bcdac.patch";
+                hash =
+                  if lib.versionOlder args.version "7.0" then
+                    "sha256-z7AZAjHaox7cqZteYAlYQQqmpFUVCr9wtF5PED1qPcU="
+                  else
+                    "sha256-Lvt0WJLlHzpCB/3JpVBe75Ljgz1CavBupf8YL8KNX2Y=";
+                decode =
+                  if lib.versionOlder args.version "7.0" then
+                    "sed 's/zend_always_inline/inline/;/register const unsigned char \\*e/{s/$/\\n/}; /\\/main\\/snprintf.h/,$ s/size_t/int/g;s/void \\*))/void * TSRMLS_DC) TSRMLS_DC)/;s/(void);/(TSRMLS_D);/'"
+                  else
+                    "cat";
+                excludes = lib.optionals (lib.versionOlder args.version "7.0") [
+                  "ext/standard/php_smart_string.h"
+                  # Handled in php56-headers-no-register.patch
+                  "Zend/zend_hash.h"
+                  "Zend/zend_string.h"
                 ];
               })
             ]
