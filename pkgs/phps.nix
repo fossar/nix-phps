@@ -83,6 +83,15 @@ let
                 ];
               })
             ]
+            ++ lib.optionals (lib.versionOlder args.version "7.2") [
+              # Add include guard to php_config.h
+              # Prevents linkage issue in C++ extensions on Clang 21
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/8d8d7ed822a01664479aa8e01e3ea05a00c3d628.patch";
+                hash = "sha256-wv7gqdYERRRmK46ltZJzTritq5rzffI/FTFPo7dHWQY=";
+                decode = "sed 's/configure.ac/configure.in/'";
+              })
+            ]
             ++ lib.optionals (lib.versions.majorMinor args.version == "7.2") [
               # Building the bundled intl extension fails on Mac OS.
               # See https://bugs.php.net/bug.php?id=76826 for more information.
