@@ -43,6 +43,9 @@ let
               # Source: https://aur.archlinux.org/packages/php56-ldap?all_deps=1#comment-954506
               ./patches/php56-autoconf.patch
 
+              # Fix build with Clang 21
+              ./patches/php56-ext-ereg-Avoid-K-R-style-function-declarations.patch
+
               # Remove trailing spaces to allow later patches to apply.
               (prev.pkgs.fetchpatch {
                 url = "https://github.com/php/php-src/commit/b7a7b1a624c97945c0aaa49d46ae996fc0bdb6bc.patch";
