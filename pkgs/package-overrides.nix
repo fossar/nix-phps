@@ -689,14 +689,14 @@ in
       else
         throw "php.extensions.mysql requires PHP version < 7.0.";
 
-    mysqli =
-      if lib.versionOlder prev.php.version "7.0" then
-        prev.extensions.mysqli.overrideAttrs (attrs: {
+    mysqli = prev.extensions.mysqli.overrideAttrs (attrs: {
+      env = mergeEnv attrs {
+        NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.0") [
           # the --with-mysql-sock option didn't exist in php 5.6
-          NIX_CFLAGS_COMPILE = "-DPHP_MYSQL_UNIX_SOCK_ADDR=\"/run/mysqld/mysqld.sock\"";
-        })
-      else
-        prev.extensions.mysqli;
+          "-DPHP_MYSQL_UNIX_SOCK_ADDR=\"/run/mysqld/mysqld.sock\""
+        ];
+      };
+    });
 
     mysqlnd = prev.extensions.mysqlnd.overrideAttrs (attrs: {
       patches =
