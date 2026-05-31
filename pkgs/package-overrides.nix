@@ -599,7 +599,7 @@ in
           lib.optionals (lib.versionOlder prev.php.version "7.0") [
             "-Wno-implicit-function-declaration"
           ]
-          ++ lib.optionals (lib.versionOlder prev.php.version "7.4" && !isClang) [
+          ++ lib.optionals (lib.versionOlder prev.php.version "7.0" && !isClang) [
             "-Wno-incompatible-pointer-types"
           ];
       };
