@@ -1,0 +1,41 @@
+From 7bc9face5f4302807c05e6a4e31a8c53a4f7cc33 Mon Sep 17 00:00:00 2001
+From: Nikita Popov <nikic@php.net>
+Date: Sat, 18 Jul 2015 21:24:28 +0200
+Subject: [PATCH] Check mbfl_filt_put_invalid_char return value
+
+And fix some libmbfl warnings
+
+Partially cherry-picked from https://github.com/php/php-src/commit/f809f2811964f216018f2ff7623d779991854252
+---
+ ext/mbstring/libmbfl/filters/mbfilter_iso2022jp_mobile.c | 2 +-
+ ext/mbstring/libmbfl/filters/mbfilter_utf8_mobile.c      | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ext/mbstring/libmbfl/filters/mbfilter_iso2022jp_mobile.c b/ext/mbstring/libmbfl/filters/mbfilter_iso2022jp_mobile.c
+index 03e9633cae7..2eea777ff88 100644
+--- a/ext/mbstring/libmbfl/filters/mbfilter_iso2022jp_mobile.c
++++ b/ext/mbstring/libmbfl/filters/mbfilter_iso2022jp_mobile.c
+@@ -48,7 +48,7 @@ const mbfl_encoding mbfl_encoding_2022jp_kddi = {
+ 	mbfl_no_encoding_2022jp_kddi,
+ 	"ISO-2022-JP-MOBILE#KDDI",
+ 	"ISO-2022-JP",
+-	mbfl_encoding_2022jp_kddi_aliases,
++	&mbfl_encoding_2022jp_kddi_aliases,
+ 	NULL,
+ 	MBFL_ENCTYPE_MBCS | MBFL_ENCTYPE_SHFTCODE | MBFL_ENCTYPE_GL_UNSAFE
+ };
+diff --git a/ext/mbstring/libmbfl/filters/mbfilter_utf8_mobile.c b/ext/mbstring/libmbfl/filters/mbfilter_utf8_mobile.c
+index f9b643c17de..2898f438458 100644
+--- a/ext/mbstring/libmbfl/filters/mbfilter_utf8_mobile.c
++++ b/ext/mbstring/libmbfl/filters/mbfilter_utf8_mobile.c
+@@ -183,6 +183,7 @@ const struct mbfl_convert_vtbl vtbl_wchar_utf8_sb = {
+ };
+ 
+ #define CK(statement)	do { if ((statement) < 0) return (-1); } while (0)
++int mbfl_filt_put_invalid_char(int c, mbfl_convert_filter *filter);
+ 
+ /*
+  * UTF-8 => wchar
+-- 
+2.53.0
+

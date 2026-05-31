@@ -549,7 +549,11 @@ in
           upstreamPatches = attrs.patches or [ ];
 
           ourPatches =
-            lib.optionals (lib.versionOlder prev.php.version "7.2") [
+            lib.optionals (lib.versionOlder prev.php.version "7.0") [
+              # Add missing declaration
+              ./patches/php56-mbstring-missing-declaration.patch
+            ]
+            ++ lib.optionals (lib.versionOlder prev.php.version "7.2") [
               # Upgrade to oniguruma 6 file layout.
               (pkgs.fetchpatch {
                 url = "https://github.com/php/php-src/commit/2a76d2282ad26c757d42b5ce2d079dcff07ae9de.patch";
@@ -591,18 +595,7 @@ in
             chmod -R +w ext/mbstring/oniguruma
           ''
         )
-
       );
-
-      env = mergeEnv attrs {
-        NIX_CFLAGS_COMPILE =
-          lib.optionals (lib.versionOlder prev.php.version "7.0") [
-            "-Wno-implicit-function-declaration"
-          ]
-          ++ lib.optionals (lib.versionOlder prev.php.version "7.0" && !isClang) [
-            "-Wno-incompatible-pointer-types"
-          ];
-      };
     });
 
     mcrypt =
