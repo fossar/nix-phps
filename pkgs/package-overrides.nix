@@ -255,11 +255,14 @@ in
       });
 
     fileinfo = prev.extensions.fileinfo.overrideAttrs (attrs: {
-      env = mergeEnv attrs {
-        NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.2") [
-          "-Wno-implicit-int"
-        ];
-      };
+      postPatch = appendStrings attrs "postPatch" (
+        lib.optional (lib.versionOlder prev.php.version "7.0") ''
+          # Add missing return type
+          # Part of https://github.com/php/php-src/commit/2181ed2e2ab0c137d843e2ebea1d7d92e7d9b759
+          substituteInPlace ext/fileinfo/libmagic/funcs.c \
+            --replace "file_replace" "protected int file_replace"
+        ''
+      );
     });
 
     ffi =
