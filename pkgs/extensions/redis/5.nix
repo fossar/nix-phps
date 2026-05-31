@@ -7,12 +7,12 @@
 }:
 
 buildPecl {
-  version = "6.0.2";
+  version = "5.3.7";
   pname = "redis";
 
   src = fetchurl {
-    url = "http://pecl.php.net/get/redis-6.0.2.tgz";
-    hash = "sha256-Aa7MsOFPiX/lbwUJvm5pkf8K1Fn5006V5FVtAmmbmgM=";
+    url = "http://pecl.php.net/get/redis-5.3.7.tgz";
+    hash = "sha256-uVgWbM2k9AvRfGmY+eIjkCGuZERnzYrVwV3vQgqtZbA=";
   };
 
   internalDeps = [
