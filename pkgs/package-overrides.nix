@@ -475,6 +475,22 @@ in
                 url = "https://github.com/php/php-src/commit/93a9b56c90c334896e977721bfb3f38b1721cec6.patch";
                 sha256 = "055l40lpyhb0rbjn6y23qkzdhvpp7inbnn6x13cpn4inmhjqfpg4";
               })
+            ]
+            ++ lib.optionals (lib.versionOlder prev.php.version "8.1") [
+              # Fix build with Clang 21
+              (pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/e90180d06a3b7ed7931571cd21004879b22ee362.patch";
+                hash =
+                  if lib.versionOlder prev.php.version "7.0" then
+                    "sha256-66FlpUI6CwANMUlqJZdGDOrfLKfDmk4i5xbrTjhCJoc="
+                  else
+                    "sha256-4F2hD1w6B2GLsq/mZEKMOhJg0vcHh3MnAsBJCvv4P5c=";
+                decode =
+                  if lib.versionOlder prev.php.version "7.0" then
+                    "sed 's/zend_long/long/;s/zend_ulong/unsigned long/'"
+                  else
+                    "cat";
+              })
             ];
         in
         ourPatches ++ upstreamPatches;
