@@ -277,6 +277,13 @@ let
                 "-Wno-incompatible-${lib.optionalString isClang "function-"}pointer-types"
                 "-Wno-incompatible-pointer-types-discards-qualifiers"
               ];
+
+            NIX_LDFLAGS =
+              lib.optionals (lib.versionOlder args.version "8.0" && prev.stdenv.hostPlatform.isDarwin)
+                [
+                  # Fix missing symbols
+                  "-lresolv"
+                ];
           };
         };
 
