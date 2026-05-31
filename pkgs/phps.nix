@@ -15,6 +15,9 @@ let
 
   inherit (prev.stdenv.cc) isClang;
 
+  # Change to true to force building with Clang, to allow reproducing some Darwin build failures on Linux.
+  useClang = false;
+
   _mkArgs =
     args:
 
@@ -171,17 +174,31 @@ let
           prevArgs:
 
           # Only pass these attributes if the package function actually expects them.
-          lib.filterAttrs (key: _v: builtins.hasAttr key prevArgs) {
-            inherit libxml2 libxslt pcre2;
+          lib.filterAttrs (key: _v: builtins.hasAttr key prevArgs) (
+            {
+              inherit libxml2 libxslt pcre2;
 
-            # For passing pcre2 to stuff called with callPackage in php-packages.nix.
-            pkgs =
-              prev
-              // (lib.makeScope prev.newScope (self: {
-                inherit libxml2 libxslt pcre2;
-              }));
-          }
+              # For passing pcre2 to stuff called with callPackage in php-packages.nix.
+              pkgs =
+                prev
+                // (lib.makeScope prev.newScope (
+                  self:
+                  {
+                    inherit libxml2 libxslt pcre2;
+                  }
+                  // lib.optionalAttrs useClang {
+                    stdenv = prev.clangStdenv;
+                  }
+                ));
+            }
+            // lib.optionalAttrs useClang {
+              stdenv = prev.clangStdenv;
+            }
+          )
         );
+    }
+    // lib.optionalAttrs useClang {
+      stdenv = prev.clangStdenv;
     }
     // args;
 
