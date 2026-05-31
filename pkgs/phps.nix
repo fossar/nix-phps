@@ -60,6 +60,12 @@ let
                   "main/reentrancy.c"
                 ];
               })
+
+              # Fix leak in configure script, required for aa405b7da270595d349d0596ad31305a41d4b1c0.
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/1bdffee820d92f558d883bd1aa41bebc739e2980.patch";
+                hash = "sha256-YzrA6vWxTsmby0zCqSiSr5MDqJZwPHsPW0mrGJvc/pQ=";
+              })
             ]
             ++ lib.optionals (lib.versionOlder args.version "7.1") [
               # Building the bundled intl extension fails with Clang 21
@@ -98,6 +104,38 @@ let
               (prev.pkgs.fetchurl {
                 url = "https://bugs.php.net/patch-display.php?bug_id=76826&patch=bug76826.poc.0.patch&revision=1538723399&download=1";
                 hash = "sha256-6JoyxVir3AG3VC6Q0uKrfb/ZFjs9/db+uZg3ssBdqzw=";
+              })
+            ]
+            ++ lib.optionals (lib.versionOlder args.version "7.3") [
+              # Update autoconf files to prepare for later patches.
+              # Picked from https://github.com/php/php-src/commit/4371945b8b71e000ee060b9da668a6eea032df32
+              (
+                if lib.versionOlder args.version "7.0" then
+                  ./patches/php56-autoconf-ifelse.patch
+                else if lib.versionOlder args.version "7.1" then
+                  ./patches/php70-autoconf-ifelse.patch
+                else if lib.versionOlder args.version "7.2" then
+                  ./patches/php71-autoconf-ifelse.patch
+                else
+                  ./patches/php72-autoconf-ifelse.patch
+              )
+
+              # Fix sprintf detection
+              # https://github.com/php/php-src/commit/aa405b7da270595d349d0596ad31305a41d4b1c0
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/aa405b7da270595d349d0596ad31305a41d4b1c0.patch";
+                hash =
+                  if lib.versionOlder args.version "7.1" then
+                    "sha256-cyjxpX9KATekkdFsmoZN6dxIMDuFpJLKLXBvgobvNc0="
+                  else if lib.versionOlder args.version "7.2" then
+                    "sha256-OF0jS4SKv+fAA6EMh9D0Vzbx8z5NdkreyKiLAJPozH8="
+                  else
+                    "sha256-wg2Wk3gjzGAxqCfFa1S7bg5ex4gOR+EJ4XhnVzanPZI=";
+                decode =
+                  if lib.versionOlder args.version "7.2" then
+                    "sed 's/configure.ac/configure.in/;${lib.optionalString (lib.versionOlder args.version "7.1") " s/char buf\\[3\\];/char buf[3]; /; s/if (!dir)/if (!dir) /"}'"
+                  else
+                    "cat";
               })
             ]
             ++ lib.optionals (lib.versionOlder args.version "7.4") [
@@ -238,13 +276,6 @@ let
                 "-Wno-deprecated-declarations"
                 "-Wno-incompatible-${lib.optionalString isClang "function-"}pointer-types"
                 "-Wno-incompatible-pointer-types-discards-qualifiers"
-              ]
-              ++ lib.optionals (lib.versionOlder args.version "8.0") [
-                "-Wno-implicit-int"
-                "-Wno-implicit-function-declaration"
-              ]
-              ++ lib.optionals (lib.versionAtLeast args.version "7.3" && lib.versionOlder args.version "7.4") [
-                "-Wno-int-conversion"
               ];
           };
         };

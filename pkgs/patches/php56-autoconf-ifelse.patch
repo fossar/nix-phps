@@ -1,0 +1,1941 @@
+From f33736f0dcc1549857094fc40e0348bcad5925b1 Mon Sep 17 00:00:00 2001
+From: Peter Kokot <peterkokot@gmail.com>
+Date: Mon, 30 Jul 2018 01:50:24 +0200
+Subject: [PATCH] Replace obsolete AC_TRY_FOO with AC_FOO_IFELSE
+
+Autoconf 2.50 released in 2001 made several macros obsolete including
+the AC_TRY_RUN, AC_TRY_COMPILE and AC_TRY_LINK:
+http://git.savannah.gnu.org/cgit/autoconf.git/tree/ChangeLog.2
+
+These macros should be replaced with the current AC_FOO_IFELSE instead:
+- AC_TRY_RUN with AC_RUN_IFELSE and AC_LANG_SOURCE
+- AC_TRY_LINK with AC_LINK_IFELSE and AC_LANG_PROGRAM
+- AC_TRY_COMPILE with AC_COMPILE_IFELSE and AC_LANG_PROGRAM
+
+PHP 5.4 to 7.1 require Autoconf 2.59+ version, PHP 7.2 and above require
+2.64+ version, and the PHP 7.2 phpize script requires 2.59+ version which
+are all greater than above mentioned 2.50 version therefore systems
+should be well supported by now.
+
+This patch was created with the help of autoupdate script:
+autoupdate <file>
+
+Reference docs:
+- https://www.gnu.org/software/autoconf/manual/autoconf-2.69/html_node/Obsolete-Macros.html
+- https://www.gnu.org/software/autoconf/manual/autoconf-2.59/autoconf.pdf
+
+(cherry picked from commit 4371945b8b71e000ee060b9da668a6eea032df32)
+---
+ Zend/Zend.m4           |  30 ++++----
+ Zend/acinclude.m4      |  45 ++++++------
+ acinclude.m4           | 155 ++++++++++++++++++++---------------------
+ build/build2.mk        |   2 +-
+ configure.in           |  19 +++--
+ ext/curl/config.m4     |  10 +--
+ ext/dba/config.m4      |  14 ++--
+ ext/fileinfo/config.m4 |   6 +-
+ ext/iconv/config.m4    |  25 +++----
+ ext/imap/config.m4     |  12 ++--
+ ext/ldap/config.m4     |   4 +-
+ ext/mbstring/config.m4 |  10 +--
+ ext/opcache/config.m4  |  30 ++++----
+ ext/posix/config.m4    |  10 +--
+ ext/recode/config.m4   |   7 +-
+ ext/sockets/config.m4  |  20 +++---
+ ext/standard/config.m4 |  46 ++++++------
+ ext/sysvsem/config.m4  |   6 +-
+ sapi/cli/config.m4     |   9 ++-
+ sapi/fpm/config.m4     |  93 +++++++++++--------------
+ 20 files changed, 264 insertions(+), 289 deletions(-)
+
+diff --git a/Zend/Zend.m4 b/Zend/Zend.m4
+index 945409eb1e1..68fa08a0a3a 100644
+--- a/Zend/Zend.m4
++++ b/Zend/Zend.m4
+@@ -6,24 +6,24 @@ dnl
+ 
+ AC_DEFUN([LIBZEND_CHECK_INT_TYPE],[
+ AC_MSG_CHECKING(for $1)
+-AC_TRY_COMPILE([
+-#if HAVE_SYS_TYPES_H  
++AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
++#if HAVE_SYS_TYPES_H
+ #include <sys/types.h>
+ #endif
+ #if HAVE_INTTYPES_H  
+ #include <inttypes.h>
+ #elif HAVE_STDINT_H
+ #include <stdint.h>
+-#endif],
+-[if (($1 *) 0)
++#endif]],
++[[if (($1 *) 0)
+   return 0;
+ if (sizeof ($1))
+   return 0;
+-],[
++]])],[
+   AC_DEFINE_UNQUOTED([HAVE_]translit($1,a-z_-,A-Z__), 1,[Define if $1 type is present. ])
+   AC_MSG_RESULT(yes)
+-], AC_MSG_RESULT(no)
+-)dnl
++], [AC_MSG_RESULT(no)
++])dnl
+ ])
+ 
+ AC_DEFUN([LIBZEND_BASIC_CHECKS],[
+@@ -109,7 +109,7 @@ ZEND_CHECK_FLOAT_PRECISION
+ dnl test whether double cast to long preserves least significant bits
+ AC_MSG_CHECKING(whether double cast to long preserves least significant bits)
+ 
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <limits.h>
+ 
+ int main()
+@@ -129,7 +129,7 @@ int main()
+ 	}
+ 	exit(1);
+ }
+-], [
++]])], [
+   AC_DEFINE([ZEND_DVAL_TO_LVAL_CAST_OK], 1, [Define if double cast to long preserves least significant bits])
+   AC_MSG_RESULT(yes)
+ ], [
+@@ -246,7 +246,7 @@ dnl test and set the alignment define for ZEND_MM
+ dnl this also does the logarithmic test for ZEND_MM.
+ AC_MSG_CHECKING(for MM alignment and log values)
+ 
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <stdio.h>
+ 
+ typedef union _mm_align_test {
+@@ -278,7 +278,7 @@ int main()
+ 
+   exit(0);
+ }
+-], [
++]])], [
+   LIBZEND_MM_ALIGN=`cat conftest.zend | cut -d ' ' -f 1`
+   LIBZEND_MM_ALIGN_LOG2=`cat conftest.zend | cut -d ' ' -f 2`
+   AC_DEFINE_UNQUOTED(ZEND_MM_ALIGNMENT, $LIBZEND_MM_ALIGN, [ ])
+@@ -293,7 +293,7 @@ AC_MSG_RESULT(done)
+ dnl test for memory allocation using mmap(MAP_ANON)
+ AC_MSG_CHECKING(for memory allocation using mmap(MAP_ANON))
+ 
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+@@ -325,7 +325,7 @@ int main()
+ 	}
+ 	return 0;
+ }
+-], [
++]])], [
+   AC_DEFINE([HAVE_MEM_MMAP_ANON], 1, [Define if the target system has support for memory allocation using mmap(MAP_ANON)])
+   AC_MSG_RESULT(yes)
+ ], [
+@@ -338,7 +338,7 @@ int main()
+ dnl test for memory allocation using mmap("/dev/zero")
+ AC_MSG_CHECKING(for memory allocation using mmap("/dev/zero"))
+ 
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+@@ -380,7 +380,7 @@ int main()
+ 	}
+ 	return 0;
+ }
+-], [
++]])], [
+   AC_DEFINE([HAVE_MEM_MMAP_ZERO], 1, [Define if the target system has support for memory allocation using mmap("/dev/zero")])
+   AC_MSG_RESULT(yes)
+ ], [
+diff --git a/Zend/acinclude.m4 b/Zend/acinclude.m4
+index 7fa8c999405..91f4fbbc681 100644
+--- a/Zend/acinclude.m4
++++ b/Zend/acinclude.m4
+@@ -46,16 +46,14 @@ AC_DEFUN([LIBZEND_BISON_CHECK],[
+ 
+ AC_DEFUN([ZEND_FP_EXCEPT],[
+   AC_CACHE_CHECK(whether fp_except is defined, ac_cv_type_fp_except,[
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <floatingpoint.h>
+-],[
++]],[[
+ fp_except x = (fp_except) 0;
+-],[
++]])],[
+      ac_cv_type_fp_except=yes
+ ],[
+      ac_cv_type_fp_except=no
+-],[
+-     ac_cv_type_fp_except=no
+ ])])
+   if test "$ac_cv_type_fp_except" = "yes"; then
+     AC_DEFINE(HAVE_FP_EXCEPT, 1, [whether floatingpoint.h defines fp_except])
+@@ -67,7 +65,7 @@ dnl Check for broken sprintf()
+ dnl
+ AC_DEFUN([AC_ZEND_BROKEN_SPRINTF],[
+   AC_CACHE_CHECK(whether sprintf is broken, ac_cv_broken_sprintf,[
+-    AC_TRY_RUN([main() {char buf[20];exit(sprintf(buf,"testing 123")!=11); }],[
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[main() {char buf[20];exit(sprintf(buf,"testing 123")!=11); }]])],[
+       ac_cv_broken_sprintf=no
+     ],[
+       ac_cv_broken_sprintf=yes
+@@ -91,8 +89,7 @@ AC_DEFUN([AC_ZEND_C_BIGENDIAN],
+ [AC_CACHE_CHECK([whether byte ordering is bigendian], ac_cv_c_bigendian_php,
+  [
+   ac_cv_c_bigendian_php=unknown
+-  AC_TRY_RUN(
+-  [
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ int main(void)
+ {
+         short one = 1;
+@@ -104,7 +101,7 @@ int main(void)
+                 return(1);
+         }
+ }
+-  ], [ac_cv_c_bigendian_php=yes], [ac_cv_c_bigendian_php=no], [ac_cv_c_bigendian_php=unknown])
++  ]])], [ac_cv_c_bigendian_php=yes], [ac_cv_c_bigendian_php=no], [ac_cv_c_bigendian_php=unknown])
+  ])
+  if test $ac_cv_c_bigendian_php = yes; then
+    AC_DEFINE(WORDS_BIGENDIAN, [], [Define if processor uses big-endian word])
+@@ -119,9 +116,9 @@ dnl x87 floating point internal precision control checks
+ dnl See: http://wiki.php.net/rfc/rounding
+ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+   AC_MSG_CHECKING([for usable _FPU_SETCW])
+-  AC_TRY_LINK([
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+     #include <fpu_control.h>
+-  ],[
++  ]],[[
+     fpu_control_t fpu_oldcw, fpu_cw;
+     volatile double result;
+     double a = 2877.0;
+@@ -132,7 +129,7 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+     _FPU_SETCW(fpu_cw);
+     result = a / b;
+     _FPU_SETCW(fpu_oldcw);
+-  ], [ac_cfp_have__fpu_setcw=yes], [ac_cfp_have__fpu_setcw=no])
++  ]])],[ac_cfp_have__fpu_setcw=yes],[ac_cfp_have__fpu_setcw=no])
+   if test "$ac_cfp_have__fpu_setcw" = "yes" ; then
+     AC_DEFINE(HAVE__FPU_SETCW, 1, [whether _FPU_SETCW is present and usable])
+     AC_MSG_RESULT(yes)
+@@ -141,9 +138,9 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+   fi
+   
+   AC_MSG_CHECKING([for usable fpsetprec])
+-  AC_TRY_LINK([
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+     #include <machine/ieeefp.h>
+-  ],[
++  ]],[[
+     fp_prec_t fpu_oldprec;
+     volatile double result;
+     double a = 2877.0;
+@@ -153,7 +150,7 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+     fpsetprec(FP_PD);
+     result = a / b;
+     fpsetprec(fpu_oldprec);
+-  ], [ac_cfp_have_fpsetprec=yes], [ac_cfp_have_fpsetprec=no])
++  ]])], [ac_cfp_have_fpsetprec=yes], [ac_cfp_have_fpsetprec=no])
+   if test "$ac_cfp_have_fpsetprec" = "yes" ; then
+     AC_DEFINE(HAVE_FPSETPREC, 1, [whether fpsetprec is present and usable])
+     AC_MSG_RESULT(yes)
+@@ -162,9 +159,9 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+   fi
+ 
+   AC_MSG_CHECKING([for usable _controlfp])
+-  AC_TRY_LINK([
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+     #include <float.h>
+-  ],[
++  ]],[[
+     unsigned int fpu_oldcw;
+     volatile double result;
+     double a = 2877.0;
+@@ -174,7 +171,7 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+     _controlfp(_PC_53, _MCW_PC);
+     result = a / b;
+     _controlfp(fpu_oldcw, _MCW_PC);
+-  ], [ac_cfp_have__controlfp=yes], [ac_cfp_have__controlfp=no])
++  ]])], [ac_cfp_have__controlfp=yes], [ac_cfp_have__controlfp=no])
+   if test "$ac_cfp_have__controlfp" = "yes" ; then
+     AC_DEFINE(HAVE__CONTROLFP, 1, [whether _controlfp is present usable])
+     AC_MSG_RESULT(yes)
+@@ -183,9 +180,9 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+   fi
+ 
+   AC_MSG_CHECKING([for usable _controlfp_s])
+-  AC_TRY_LINK([
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    #include <float.h>
+-  ],[
++  ]],[[
+     unsigned int fpu_oldcw, fpu_cw;
+     volatile double result;
+     double a = 2877.0;
+@@ -196,7 +193,7 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+     _controlfp_s(&fpu_cw, _PC_53, _MCW_PC);
+     result = a / b;
+     _controlfp_s(&fpu_cw, fpu_oldcw, _MCW_PC);
+-  ], [ac_cfp_have__controlfp_s=yes], [ac_cfp_have__controlfp_s=no])
++  ]])], [ac_cfp_have__controlfp_s=yes], [ac_cfp_have__controlfp_s=no])
+   if test "$ac_cfp_have__controlfp_s" = "yes" ; then
+     AC_DEFINE(HAVE__CONTROLFP_S, 1, [whether _controlfp_s is present and usable])
+     AC_MSG_RESULT(yes)
+@@ -205,9 +202,9 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+   fi
+ 
+   AC_MSG_CHECKING([whether FPU control word can be manipulated by inline assembler])
+-  AC_TRY_LINK([
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+     /* nothing */
+-  ],[
++  ]],[[
+     unsigned int oldcw, cw;
+     volatile double result;
+     double a = 2877.0;
+@@ -220,7 +217,7 @@ AC_DEFUN([ZEND_CHECK_FLOAT_PRECISION],[
+     result = a / b;
+ 
+     __asm__ __volatile__ ("fldcw %0" : : "m" (*&oldcw));
+-  ], [ac_cfp_have_fpu_inline_asm_x86=yes], [ac_cfp_have_fpu_inline_asm_x86=no])
++  ]])], [ac_cfp_have_fpu_inline_asm_x86=yes], [ac_cfp_have_fpu_inline_asm_x86=no])
+   if test "$ac_cfp_have_fpu_inline_asm_x86" = "yes" ; then
+     AC_DEFINE(HAVE_FPU_INLINE_ASM_X86, 1, [whether FPU control word can be manipulated by inline assembler])
+     AC_MSG_RESULT(yes)
+diff --git a/acinclude.m4 b/acinclude.m4
+index 3db7438204d..32dc10f5ea4 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -303,7 +303,7 @@ AC_MSG_CHECKING([if compiler supports -R])
+ AC_CACHE_VAL(php_cv_cc_dashr,[
+   SAVE_LIBS=$LIBS
+   LIBS="-R /usr/$PHP_LIBDIR $LIBS"
+-  AC_TRY_LINK([], [], php_cv_cc_dashr=yes, php_cv_cc_dashr=no)
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],[php_cv_cc_dashr=yes],[php_cv_cc_dashr=no])
+   LIBS=$SAVE_LIBS])
+ AC_MSG_RESULT([$php_cv_cc_dashr])
+ if test $php_cv_cc_dashr = "yes"; then
+@@ -313,7 +313,7 @@ else
+   AC_CACHE_VAL(php_cv_cc_rpath,[
+     SAVE_LIBS=$LIBS
+     LIBS="-Wl,-rpath,/usr/$PHP_LIBDIR $LIBS"
+-    AC_TRY_LINK([], [], php_cv_cc_rpath=yes, php_cv_cc_rpath=no)
++    AC_LINK_IFELSE([AC_LANG_PROGRAM([], [])],[php_cv_cc_rpath=yes],[php_cv_cc_rpath=no])
+     LIBS=$SAVE_LIBS])
+   AC_MSG_RESULT([$php_cv_cc_rpath])
+   if test $php_cv_cc_rpath = "yes"; then
+@@ -1072,7 +1072,7 @@ AC_DEFUN([_PHP_CHECK_SIZEOF], [
+     LIBS=
+     old_LDFLAGS=$LDFLAGS
+     LDFLAGS=
+-    AC_TRY_RUN([#include <stdio.h>
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <stdio.h>
+ #if STDC_HEADERS
+ #include <stdlib.h>
+ #include <stddef.h>
+@@ -1092,7 +1092,7 @@ int main()
+ 	fprintf(fp, "%d\n", sizeof($1));
+ 	return(0);
+ }
+-  ], [
++  ]])], [
+     eval $php_cache_value=`cat conftestval`
+   ], [
+     eval $php_cache_value=0
+@@ -1167,7 +1167,7 @@ dnl Type can be: irix, hpux or POSIX
+ dnl
+ AC_DEFUN([PHP_TIME_R_TYPE],[
+ AC_CACHE_CHECK(for type of reentrant time-related functions, ac_cv_time_r_type,[
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <time.h>
+ 
+ main() {
+@@ -1181,10 +1181,10 @@ r = (int) asctime_r(&t, buf, 26);
+ if (r == s && s == 0) return (0);
+ return (1);
+ }
+-],[
++]])],[
+   ac_cv_time_r_type=hpux
+ ],[
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <time.h>
+ main() {
+   struct tm t, *s;
+@@ -1196,7 +1196,7 @@ main() {
+   if (p == buf && s == &t) return (0);
+   return (1);
+ }
+-  ],[
++  ]])],[
+     ac_cv_time_r_type=irix
+   ],[
+     ac_cv_time_r_type=POSIX
+@@ -1217,7 +1217,7 @@ dnl
+ dnl PHP_DOES_PWRITE_WORK
+ dnl internal
+ AC_DEFUN([PHP_DOES_PWRITE_WORK],[
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+@@ -1234,7 +1234,7 @@ $1
+     exit(0);
+     }
+ 
+-  ],[
++  ]])],[
+     ac_cv_pwrite=yes
+   ],[
+     ac_cv_pwrite=no
+@@ -1247,7 +1247,7 @@ dnl PHP_DOES_PREAD_WORK
+ dnl internal
+ AC_DEFUN([PHP_DOES_PREAD_WORK],[
+   echo test > conftest_in
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+@@ -1263,7 +1263,7 @@ $1
+     if (pread(fd, buf, 2, -1) != -1 || errno != EINVAL) exit(1);
+     exit(0);
+     }
+-  ],[
++  ]])],[
+     ac_cv_pread=yes
+   ],[
+     ac_cv_pread=no
+@@ -1322,27 +1322,27 @@ dnl PHP_MISSING_TIME_R_DECL
+ dnl
+ AC_DEFUN([PHP_MISSING_TIME_R_DECL],[
+   AC_MSG_CHECKING([for missing declarations of reentrant functions])
+-  AC_TRY_COMPILE([#include <time.h>],[struct tm *(*func)() = localtime_r],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[struct tm *(*func)() = localtime_r]])],[
+     :
+   ],[
+     AC_DEFINE(MISSING_LOCALTIME_R_DECL,1,[Whether localtime_r is declared])
+   ])
+-  AC_TRY_COMPILE([#include <time.h>],[struct tm *(*func)() = gmtime_r],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[struct tm *(*func)() = gmtime_r]])],[
+     :
+   ],[
+     AC_DEFINE(MISSING_GMTIME_R_DECL,1,[Whether gmtime_r is declared])
+   ])
+-  AC_TRY_COMPILE([#include <time.h>],[char *(*func)() = asctime_r],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[char *(*func)() = asctime_r]])],[
+     :
+   ],[
+     AC_DEFINE(MISSING_ASCTIME_R_DECL,1,[Whether asctime_r is declared])
+   ])
+-  AC_TRY_COMPILE([#include <time.h>],[char *(*func)() = ctime_r],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[char *(*func)() = ctime_r]])],[
+     :
+   ],[
+     AC_DEFINE(MISSING_CTIME_R_DECL,1,[Whether ctime_r is declared])
+   ])
+-  AC_TRY_COMPILE([#include <string.h>],[char *(*func)() = strtok_r],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <string.h>]], [[char *(*func)() = strtok_r]])],[
+     :
+   ],[
+     AC_DEFINE(MISSING_STRTOK_R_DECL,1,[Whether strtok_r is declared])
+@@ -1358,7 +1358,7 @@ AC_DEFUN([PHP_READDIR_R_TYPE],[
+   AC_CHECK_FUNC(readdir_r,ac_cv_func_readdir_r=yes,ac_cv_func_readdir=no)
+   if test "$ac_cv_func_readdir_r" = "yes"; then
+   AC_CACHE_CHECK(for type of readdir_r, ac_cv_what_readdir_r,[
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #define _REENTRANT
+ #include <sys/types.h>
+ #include <dirent.h>
+@@ -1379,7 +1379,7 @@ main() {
+     exit(0);
+   exit(1);
+ }
+-    ],[
++    ]])],[
+       ac_cv_what_readdir_r=POSIX
+     ],[
+       AC_TRY_CPP([
+@@ -1410,9 +1410,9 @@ dnl PHP_TM_GMTOFF
+ dnl 
+ AC_DEFUN([PHP_TM_GMTOFF],[
+ AC_CACHE_CHECK([for tm_gmtoff in struct tm], ac_cv_struct_tm_gmtoff,
+-[AC_TRY_COMPILE([#include <sys/types.h>
+-#include <$ac_cv_struct_tm>], [struct tm tm; tm.tm_gmtoff;],
+-  ac_cv_struct_tm_gmtoff=yes, ac_cv_struct_tm_gmtoff=no)])
++[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
++#include <$ac_cv_struct_tm>]], [[struct tm tm; tm.tm_gmtoff;]])],
++  [ac_cv_struct_tm_gmtoff=yes], [ac_cv_struct_tm_gmtoff=no])])
+ 
+ if test "$ac_cv_struct_tm_gmtoff" = yes; then
+   AC_DEFINE(HAVE_TM_GMTOFF,1,[whether you have tm_gmtoff in struct tm])
+@@ -1424,12 +1424,10 @@ dnl PHP_STRUCT_FLOCK
+ dnl
+ AC_DEFUN([PHP_STRUCT_FLOCK],[
+ AC_CACHE_CHECK(for struct flock,ac_cv_struct_flock,
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <unistd.h>
+ #include <fcntl.h>
+-        ],
+-        [struct flock x;],
+-        [
++        ]], [[struct flock x;]])],[
+           ac_cv_struct_flock=yes
+         ],[
+           ac_cv_struct_flock=no
+@@ -1445,12 +1443,12 @@ dnl PHP_SOCKLEN_T
+ dnl
+ AC_DEFUN([PHP_SOCKLEN_T],[
+ AC_CACHE_CHECK(for socklen_t,ac_cv_socklen_t,
+-  AC_TRY_COMPILE([
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <sys/types.h>
+ #include <sys/socket.h>
+-],[
++]],[[
+ socklen_t x;
+-],[
++]])],[
+   ac_cv_socklen_t=yes
+ ],[
+   ac_cv_socklen_t=no
+@@ -1467,7 +1465,7 @@ dnl See if we have broken header files like SunOS has.
+ dnl
+ AC_DEFUN([PHP_MISSING_FCLOSE_DECL],[
+   AC_MSG_CHECKING([for fclose declaration])
+-  AC_TRY_COMPILE([#include <stdio.h>],[int (*func)() = fclose],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[int (*func)() = fclose]])],[
+     AC_DEFINE(MISSING_FCLOSE_DECL,0,[ ])
+     AC_MSG_RESULT([ok])
+   ],[
+@@ -1483,7 +1481,7 @@ dnl Check for broken sprintf(), C99 conformance
+ dnl
+ AC_DEFUN([PHP_AC_BROKEN_SPRINTF],[
+   AC_CACHE_CHECK(whether sprintf is broken, ac_cv_broken_sprintf,[
+-    AC_TRY_RUN([main() {char buf[20];exit(sprintf(buf,"testing 123")!=11); }],[
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[main() {char buf[20];exit(sprintf(buf,"testing 123")!=11); }]])],[
+       ac_cv_broken_sprintf=no
+     ],[
+       ac_cv_broken_sprintf=yes
+@@ -1505,7 +1503,7 @@ dnl Check for broken snprintf(), C99 conformance
+ dnl
+ AC_DEFUN([PHP_AC_BROKEN_SNPRINTF],[
+   AC_CACHE_CHECK(whether snprintf is broken, ac_cv_broken_snprintf,[
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #define NULL (0L)
+ main() {
+   char buf[20];
+@@ -1520,7 +1518,7 @@ main() {
+   res = res || (snprintf(buf, sizeof(buf), "%f", 0.12345678) != 8);
+   exit(res); 
+ }
+-    ],[
++    ]])],[
+       ac_cv_broken_snprintf=no
+     ],[
+       ac_cv_broken_snprintf=yes
+@@ -1617,9 +1615,9 @@ dnl
+ AC_DEFUN([PHP_SOCKADDR_CHECKS], [
+   dnl Check for struct sockaddr_storage exists
+   AC_CACHE_CHECK([for struct sockaddr_storage], ac_cv_sockaddr_storage,
+-    [AC_TRY_COMPILE([#include <sys/types.h>
+-#include <sys/socket.h>],
+-    [struct sockaddr_storage s; s],
++    [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
++#include <sys/socket.h>]],
++    [[struct sockaddr_storage s; s]])],
+     [ac_cv_sockaddr_storage=yes], [ac_cv_sockaddr_storage=no])
+   ])
+   if test "$ac_cv_sockaddr_storage" = "yes"; then
+@@ -1627,9 +1625,8 @@ AC_DEFUN([PHP_SOCKADDR_CHECKS], [
+   fi
+   dnl Check if field sa_len exists in struct sockaddr 
+   AC_CACHE_CHECK([for field sa_len in struct sockaddr],ac_cv_sockaddr_sa_len,[
+-    AC_TRY_COMPILE([#include <sys/types.h>
+-#include <sys/socket.h>],
+-    [static struct sockaddr sa; int n = (int) sa.sa_len; return n;],
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
++#include <sys/socket.h>]], [[static struct sockaddr sa; int n = (int) sa.sa_len; return n;]])],
+     [ac_cv_sockaddr_sa_len=yes], [ac_cv_sockaddr_sa_len=no])
+   ])
+   if test "$ac_cv_sockaddr_sa_len" = "yes"; then
+@@ -1642,15 +1639,15 @@ dnl PHP_DECLARED_TIMEZONE
+ dnl
+ AC_DEFUN([PHP_DECLARED_TIMEZONE],[
+   AC_CACHE_CHECK(for declared timezone, ac_cv_declared_timezone,[
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <sys/types.h>
+ #include <time.h>
+ #ifdef HAVE_SYS_TIME_H
+ #include <sys/time.h>
+ #endif
+-],[
++]],[[
+     time_t foo = (time_t) timezone;
+-],[
++]])],[
+   ac_cv_declared_timezone=yes
+ ],[
+   ac_cv_declared_timezone=no
+@@ -1665,11 +1662,11 @@ dnl PHP_EBCDIC
+ dnl
+ AC_DEFUN([PHP_EBCDIC], [
+   AC_CACHE_CHECK([whether system uses EBCDIC],ac_cv_ebcdic,[
+-  AC_TRY_RUN( [
+-int main(void) { 
+-  return (unsigned char)'A' != (unsigned char)0xC1; 
+-} 
+-],[
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
++int main(void) {
++  return (unsigned char)'A' != (unsigned char)0xC1;
++}
++]])],[
+   ac_cv_ebcdic=yes
+ ],[
+   ac_cv_ebcdic=no
+@@ -1705,7 +1702,7 @@ dnl
+ AC_DEFUN([PHP_BROKEN_GLIBC_FOPEN_APPEND], [
+   AC_MSG_CHECKING([for broken libc stdio])
+   AC_CACHE_VAL(_cv_have_broken_glibc_fopen_append,[
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <stdio.h>
+ int main(int argc, char *argv[])
+ {
+@@ -1729,19 +1726,19 @@ int main(int argc, char *argv[])
+   return 1;
+   return 0;
+ }
+-],
++]])],
+ [_cv_have_broken_glibc_fopen_append=no],
+-[_cv_have_broken_glibc_fopen_append=yes ],
+-AC_TRY_COMPILE([
++[_cv_have_broken_glibc_fopen_append=yes],
++[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <features.h>
+-],[
++]], [[
+ #if !__GLIBC_PREREQ(2,2)
+ choke me
+ #endif
+-],
++]])],
+ [_cv_have_broken_glibc_fopen_append=yes],
+-[_cv_have_broken_glibc_fopen_append=no ])
+-)])
++[_cv_have_broken_glibc_fopen_append=no])
++])])
+ 
+   if test "$_cv_have_broken_glibc_fopen_append" = "yes"; then
+     AC_MSG_RESULT(yes)
+@@ -1761,17 +1758,17 @@ AC_DEFUN([PHP_FOPENCOOKIE], [
+ dnl this comes in two flavors:
+ dnl newer glibcs (since 2.1.2 ? )
+ dnl have a type called cookie_io_functions_t
+-AC_TRY_COMPILE([
++AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #define _GNU_SOURCE
+ #include <stdio.h>
+-], [cookie_io_functions_t cookie;], [have_cookie_io_functions_t=yes], [])
++]], [[cookie_io_functions_t cookie;]])],[have_cookie_io_functions_t=yes],[])
+ 
+     if test "$have_cookie_io_functions_t" = "yes"; then
+       cookie_io_functions_t=cookie_io_functions_t
+       have_fopen_cookie=yes
+ 
+ dnl even newer glibcs have a different seeker definition...
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #define _GNU_SOURCE
+ #include <stdio.h>
+ 
+@@ -1799,7 +1796,7 @@ main() {
+   exit(1);
+ }
+ 
+-], [
++]])], [
+   cookie_io_functions_use_off64_t=yes
+ ], [
+   cookie_io_functions_use_off64_t=no
+@@ -1811,10 +1808,10 @@ main() {
+ 
+ dnl older glibc versions (up to 2.1.2 ?)
+ dnl call it _IO_cookie_io_functions_t
+-AC_TRY_COMPILE([
++AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #define _GNU_SOURCE
+ #include <stdio.h>
+-], [ _IO_cookie_io_functions_t cookie; ], [have_IO_cookie_io_functions_t=yes], [])
++]], [[_IO_cookie_io_functions_t cookie;]])], [have_IO_cookie_io_functions_t=yes], [])
+       if test "$have_cookie_io_functions_t" = "yes" ; then
+         cookie_io_functions_t=_IO_cookie_io_functions_t
+         have_fopen_cookie=yes
+@@ -1907,7 +1904,7 @@ AC_DEFUN([PHP_CHECK_FUNC_LIB],[
+   if test "$found" = "yes"; then
+     ac_libs=$LIBS
+     LIBS="$LIBS -l$2"
+-    AC_TRY_RUN([main() { return (0); }],[found=yes],[found=no],[found=no])
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[main() { return (0); }]])],[found=yes],[found=no],[found=no])
+     LIBS=$ac_libs
+   fi
+ 
+@@ -1955,14 +1952,14 @@ dnl
+ AC_DEFUN([PHP_TEST_BUILD], [
+   old_LIBS=$LIBS
+   LIBS="$4 $LIBS"
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+     $5
+     char $1();
+     int main() {
+       $1();
+       return 0;
+     }
+-  ], [
++  ]])],[
+     LIBS=$old_LIBS
+     $2
+   ],[
+@@ -2032,8 +2029,7 @@ AC_DEFUN([PHP_C_BIGENDIAN],
+ [AC_CACHE_CHECK([whether byte ordering is bigendian], ac_cv_c_bigendian_php,
+  [
+   ac_cv_c_bigendian_php=unknown
+-  AC_TRY_RUN(
+-  [
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ int main(void)
+ {
+   short one = 1;
+@@ -2045,7 +2041,7 @@ int main(void)
+     return(1);
+   }
+ }
+-  ], [ac_cv_c_bigendian_php=yes], [ac_cv_c_bigendian_php=no], [ac_cv_c_bigendian_php=unknown])
++  ]])], [ac_cv_c_bigendian_php=yes], [ac_cv_c_bigendian_php=no], [ac_cv_c_bigendian_php=unknown])
+  ])
+  if test $ac_cv_c_bigendian_php = yes; then
+    AC_DEFINE(WORDS_BIGENDIAN, [], [Define if processor uses big-endian word])
+@@ -2824,36 +2820,33 @@ AC_DEFUN([PHP_CRYPT_R_STYLE],
+ [
+   AC_CACHE_CHECK([which data struct is used by crypt_r], php_cv_crypt_r_style,[
+     php_cv_crypt_r_style=none
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #define _REENTRANT 1
+ #include <crypt.h>
+-],[
++]], [[
+ CRYPTD buffer;
+ crypt_r("passwd", "hash", &buffer);
+-], 
+-php_cv_crypt_r_style=cryptd)
++]])],[php_cv_crypt_r_style=cryptd],[])
+ 
+     if test "$php_cv_crypt_r_style" = "none"; then
+-      AC_TRY_COMPILE([
++      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #define _REENTRANT 1
+ #include <crypt.h>
+-],[
++]],[[
+ struct crypt_data buffer;
+ crypt_r("passwd", "hash", &buffer);
+-], 
+-php_cv_crypt_r_style=struct_crypt_data)
++]])],[php_cv_crypt_r_style=struct_crypt_data],[])
+     fi
+ 
+     if test "$php_cv_crypt_r_style" = "none"; then
+-      AC_TRY_COMPILE([
++      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #define _REENTRANT 1
+ #define _GNU_SOURCE
+ #include <crypt.h>
+-],[
++]],[[
+ struct crypt_data buffer;
+ crypt_r("passwd", "hash", &buffer);
+-], 
+-php_cv_crypt_r_style=struct_crypt_data_gnu_source)
++]])],[php_cv_crypt_r_style=struct_crypt_data_gnu_source],[])
+     fi
+     ])
+ 
+@@ -2876,7 +2869,7 @@ dnl PHP_TEST_WRITE_STDOUT
+ dnl
+ AC_DEFUN([PHP_TEST_WRITE_STDOUT],[
+   AC_CACHE_CHECK(whether writing to stdout works,ac_cv_write_stdout,[
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #ifdef HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -2890,7 +2883,7 @@ main()
+   n = write(1, TEXT, sizeof(TEXT)-1);
+   return (!(n == sizeof(TEXT)-1));
+ }
+-    ],[
++    ]])],[
+       ac_cv_write_stdout=yes
+     ],[
+       ac_cv_write_stdout=no
+diff --git a/build/build2.mk b/build/build2.mk
+index caaa53faa7b..c001aba4c83 100644
+--- a/build/build2.mk
++++ b/build/build2.mk
+@@ -30,7 +30,7 @@ targets = $(TOUCH_FILES) configure $(config_h_in)
+ PHP_AUTOCONF ?= 'autoconf'
+ PHP_AUTOHEADER ?= 'autoheader'
+ 
+-SUPPRESS_WARNINGS ?= 2>&1 | (egrep -v '(AC_TRY_RUN called without default to allow cross compiling|AC_PROG_CXXCPP was called before AC_PROG_CXX|defined in acinclude.m4 but never used|AC_PROG_LEX invoked multiple times|AC_DECL_YYTEXT is expanded from...|the top level)'||true)
++SUPPRESS_WARNINGS ?= 2>&1 | (egrep -v '(AC_RUN_IFELSE called without default to allow cross compiling|AC_PROG_CXXCPP was called before AC_PROG_CXX|defined in acinclude.m4 but never used)'||true)
+ 
+ all: $(targets)
+ 
+diff --git a/configure.in b/configure.in
+index cd12230333c..7a4d517b11e 100644
+--- a/configure.in
++++ b/configure.in
+@@ -245,7 +245,7 @@ if test "$PHP_RE2C_CGOTO" = "no"; then
+   RE2C_FLAGS=""
+ else
+   AC_MSG_CHECKING([whether re2c -g works])
+-  AC_TRY_COMPILE([],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([], [[
+ int main(int argc, const char **argv)
+ {
+   argc = argc;
+@@ -256,7 +256,7 @@ label2:
+   goto *adr[0];
+   return 0;
+ }
+-  ],[
++  ]])],[
+     RE2C_FLAGS=""
+     AC_MSG_RESULT([no])
+   ],[
+@@ -596,9 +596,9 @@ PHP_SOCKADDR_CHECKS
+ 
+ dnl Check for IPv6 support
+ AC_CACHE_CHECK([for IPv6 support], ac_cv_ipv6_support,
+-[AC_TRY_LINK([ #include <sys/types.h>
++[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
+ #include <sys/socket.h>
+-#include <netinet/in.h>], [struct sockaddr_in6 s; struct in6_addr t=in6addr_any; int i=AF_INET6; s; t.s6_addr[0] = 0;],
++#include <netinet/in.h>]], [[struct sockaddr_in6 s; struct in6_addr t=in6addr_any; int i=AF_INET6; s; t.s6_addr[0] = 0;]])],
+   [ac_cv_ipv6_support=yes], [ac_cv_ipv6_support=no])])
+ 
+ dnl Checks for library functions.
+@@ -696,9 +696,8 @@ PHP_CHECK_FUNC_LIB(nanosleep, rt)
+ dnl Check for getaddrinfo, should be a better way, but...
+ dnl Also check for working getaddrinfo
+ AC_CACHE_CHECK([for getaddrinfo], ac_cv_func_getaddrinfo,
+-[AC_TRY_LINK([#include <netdb.h>],
+-                [struct addrinfo *g,h;g=&h;getaddrinfo("","",g,&g);], 
+-  AC_TRY_RUN([
++[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <netdb.h>]],
++  [[struct addrinfo *g,h;g=&h;getaddrinfo("","",g,&g);]])],[AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <netdb.h>
+ #include <sys/types.h>
+ #ifndef AF_INET
+@@ -734,15 +733,15 @@ int main(void) {
+   freeaddrinfo(ai);
+   exit(0);
+ }
+-  ],ac_cv_func_getaddrinfo=yes, ac_cv_func_getaddrinfo=no, ac_cv_func_getaddrinfo=no),
+-ac_cv_func_getaddrinfo=no)])
++  ]])],[ac_cv_func_getaddrinfo=yes], [ac_cv_func_getaddrinfo=no], [ac_cv_func_getaddrinfo=no])],
++[ac_cv_func_getaddrinfo=no])])
+ if test "$ac_cv_func_getaddrinfo" = yes; then
+   AC_DEFINE(HAVE_GETADDRINFO,1,[Define if you have the getaddrinfo function])
+ fi
+ 
+ dnl Check for the __sync_fetch_and_add builtin
+ AC_CACHE_CHECK([for __sync_fetch_and_add], ac_cv_func_sync_fetch_and_add,
+-[AC_TRY_LINK([],[int x;__sync_fetch_and_add(&x,1);],ac_cv_func_sync_fetch_and_add=yes,ac_cv_func_sync_fetch_and_add=no)])
++[AC_LINK_IFELSE([AC_LANG_PROGRAM([], [[int x;__sync_fetch_and_add(&x,1);]])],[ac_cv_func_sync_fetch_and_add=yes],[ac_cv_func_sync_fetch_and_add=no])])
+ if test "$ac_cv_func_sync_fetch_and_add" = yes; then
+   AC_DEFINE(HAVE_SYNC_FETCH_AND_ADD,1,[Define if you have the __sync_fetch_and_add function])
+ fi
+diff --git a/ext/curl/config.m4 b/ext/curl/config.m4
+index 2f82c3485d8..fb6c19758ad 100644
+--- a/ext/curl/config.m4
++++ b/ext/curl/config.m4
+@@ -60,7 +60,8 @@ if test "$PHP_CURL" != "no"; then
+    
+     AC_PROG_CPP
+     AC_MSG_CHECKING([for openssl support in libcurl])
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
++#include <strings.h>
+ #include <curl/curl.h>
+ 
+ int main(int argc, char *argv[])
+@@ -75,7 +76,7 @@ int main(int argc, char *argv[])
+   }
+   return 1;
+ }
+-    ],[
++    ]])],[
+       AC_MSG_RESULT([yes])
+       AC_CHECK_HEADERS([openssl/crypto.h], [
+         AC_DEFINE([HAVE_CURL_OPENSSL], [1], [Have cURL with OpenSSL support])
+@@ -87,7 +88,8 @@ int main(int argc, char *argv[])
+     ])
+    
+     AC_MSG_CHECKING([for gnutls support in libcurl])
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
++#include <strings.h>
+ #include <curl/curl.h>
+ 
+ int main(int argc, char *argv[])
+@@ -102,7 +104,7 @@ int main(int argc, char *argv[])
+   }
+   return 1;
+ }
+-], [
++]])], [
+       AC_MSG_RESULT([yes])
+       AC_CHECK_HEADER([gcrypt.h], [
+         AC_DEFINE([HAVE_CURL_GNUTLS], [1], [Have cURL with GnuTLS support])
+diff --git a/ext/dba/config.m4 b/ext/dba/config.m4
+index 740cf14e39d..0255a51dee5 100644
+--- a/ext/dba/config.m4
++++ b/ext/dba/config.m4
+@@ -238,11 +238,11 @@ AC_DEFUN([PHP_DBA_DB_CHECK],[
+     if test -f $THIS_PREFIX/$PHP_LIBDIR/lib$LIB.a || test -f $THIS_PREFIX/$PHP_LIBDIR/lib$LIB.$SHLIB_SUFFIX_NAME; then
+       lib_found="";
+       PHP_TEMP_LDFLAGS(-L$THIS_PREFIX/$PHP_LIBDIR, -l$LIB,[
+-        AC_TRY_LINK([
++        AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+ #include "$THIS_INCLUDE"
+-        ],[
++        ]],[[
+           $3;
+-        ],[
++        ]])],[
+           AC_EGREP_CPP(yes,[
+ #include "$THIS_INCLUDE"
+ #if DB_VERSION_MAJOR == $1 || ($1 == 4 && DB_VERSION_MAJOR == 5)
+@@ -252,7 +252,7 @@ AC_DEFUN([PHP_DBA_DB_CHECK],[
+             THIS_LIBS=$LIB
+             lib_found=1
+           ])
+-        ])
++        ],[])
+       ])
+       if test -n "$lib_found"; then
+         lib_found="";
+@@ -484,11 +484,11 @@ if test "$PHP_DB1" != "no"; then
+   AC_MSG_RESULT([$THIS_INCLUDE])
+   if test -n "$THIS_INCLUDE"; then
+     PHP_TEMP_LDFLAGS(-L$THIS_PREFIX/$PHP_LIBDIR, -l$THIS_LIBS,[
+-      AC_TRY_LINK([
++      AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+ #include "$THIS_INCLUDE"
+-      ],[
++      ]],[[
+         DB * dbp = dbopen("", 0, 0, DB_HASH, 0);
+-      ],[
++      ]])],[
+         AC_DEFINE_UNQUOTED(DB1_INCLUDE_FILE, "$THIS_INCLUDE", [ ])
+         AC_DEFINE(DBA_DB1, 1, [ ])
+         THIS_RESULT=yes
+diff --git a/ext/fileinfo/config.m4 b/ext/fileinfo/config.m4
+index 7e98d62d8b2..57157c75e7a 100644
+--- a/ext/fileinfo/config.m4
++++ b/ext/fileinfo/config.m4
+@@ -14,7 +14,7 @@ if test "$PHP_FILEINFO" != "no"; then
+     libmagic/readcdf.c libmagic/softmagic.c"
+ 
+   AC_MSG_CHECKING([for strcasestr])
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <string.h>
+ #include <strings.h>
+ #include <stdlib.h>
+@@ -39,14 +39,14 @@ int main(void)
+ 
+         return !(NULL != ret);
+ }
+-  ],[
++  ]])],[
+     dnl using the platform implementation
+     AC_MSG_RESULT(yes)
+   ],[
+     AC_MSG_RESULT(no)
+     AC_MSG_NOTICE(using libmagic strcasestr implementation)
+     libmagic_sources="$libmagic_sources libmagic/strcasestr.c"
+-  ])
++  ],[])
+ 
+   PHP_NEW_EXTENSION(fileinfo, fileinfo.c $libmagic_sources, $ext_shared,,-I@ext_srcdir@/libmagic)
+   PHP_ADD_BUILD_DIR($ext_builddir/libmagic)
+diff --git a/ext/iconv/config.m4 b/ext/iconv/config.m4
+index a6d50cfd9d2..98bd35b0ec9 100644
+--- a/ext/iconv/config.m4
++++ b/ext/iconv/config.m4
+@@ -38,8 +38,7 @@ if test "$PHP_ICONV" != "no"; then
+ 	fi
+ 
+     AC_MSG_CHECKING([if iconv is glibc's])
+-    AC_TRY_LINK([#include <gnu/libc-version.h>],[gnu_get_libc_version();],
+-    [
++    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <gnu/libc-version.h>]], [[gnu_get_libc_version();]])],[
+       AC_MSG_RESULT(yes)
+       iconv_impl_name="glibc"
+     ],[
+@@ -50,13 +49,13 @@ if test "$PHP_ICONV" != "no"; then
+       AC_MSG_CHECKING([if using GNU libiconv])
+       php_iconv_old_ld="$LDFLAGS"
+       LDFLAGS="-liconv $LDFLAGS"
+-      AC_TRY_RUN([
++      AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <$PHP_ICONV_H_PATH>
+ int main() {
+   printf("%d", _libiconv_version);
+   return 0;
+ }
+-      ],[
++      ]])],[
+         AC_MSG_RESULT(yes)
+         iconv_impl_name="gnu_libiconv"
+       ],[
+@@ -70,8 +69,7 @@ int main() {
+ 
+     if test -z "$iconv_impl_name"; then
+       AC_MSG_CHECKING([if iconv is Konstantin Chuguev's])
+-      AC_TRY_LINK([#include <iconv.h>],[iconv_ccs_init(NULL, NULL);],
+-      [
++      AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <iconv.h>]], [[iconv_ccs_init(NULL, NULL);]])],[
+         AC_MSG_RESULT(yes)
+         iconv_impl_name="bsd"
+       ],[
+@@ -83,8 +81,7 @@ int main() {
+       AC_MSG_CHECKING([if using IBM iconv])
+       php_iconv_old_ld="$LDFLAGS"
+       LDFLAGS="-liconv $LDFLAGS"
+-      AC_TRY_LINK([#include <iconv.h>],[cstoccsid("");],
+-      [
++      AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <iconv.h>]], [[cstoccsid("");]])],[
+         AC_MSG_RESULT(yes)
+         iconv_impl_name="ibm"
+       ],[
+@@ -128,7 +125,7 @@ int main() {
+     esac
+ 
+     AC_MSG_CHECKING([if iconv supports errno])
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <$PHP_ICONV_H_PATH>
+ #include <errno.h>
+ 
+@@ -145,7 +142,7 @@ int main() {
+   iconv_close( cd );
+   return 2;
+ }
+-    ],[
++    ]])],[
+       AC_MSG_RESULT(yes)
+       PHP_DEFINE([ICONV_SUPPORTS_ERRNO],1,[ext/iconv])
+       AC_DEFINE([ICONV_SUPPORTS_ERRNO],1,[Whether iconv supports error no or not])
+@@ -160,7 +157,7 @@ int main() {
+     ])
+ 
+     AC_MSG_CHECKING([if iconv supports //IGNORE])
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <$PHP_ICONV_H_PATH>
+ #include <stdlib.h>
+ 
+@@ -176,7 +173,7 @@ int main() {
+   }
+   return 0;
+ }
+-   ],[
++   ]])],[
+       AC_MSG_RESULT(yes)
+       PHP_DEFINE([ICONV_BROKEN_IGNORE],0,[ext/iconv])
+       AC_DEFINE([ICONV_BROKEN_IGNORE],0,[Whether iconv supports IGNORE])
+@@ -191,10 +188,10 @@ int main() {
+     ])
+ 
+     AC_MSG_CHECKING([if your cpp allows macro usage in include lines])
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #define FOO <$PHP_ICONV_H_PATH>
+ #include FOO
+-    ], [], [
++    ]], [])], [
+       AC_MSG_RESULT([yes])
+       PHP_DEFINE([PHP_ICONV_H_PATH], [<$PHP_ICONV_H_PATH>],[ext/iconv])
+       AC_DEFINE_UNQUOTED([PHP_ICONV_H_PATH], [<$PHP_ICONV_H_PATH>], [Path to iconv.h])
+diff --git a/ext/imap/config.m4 b/ext/imap/config.m4
+index d0b86cba1c8..c6409835cb0 100644
+--- a/ext/imap/config.m4
++++ b/ext/imap/config.m4
+@@ -128,13 +128,13 @@ if test "$PHP_IMAP" != "no"; then
+     old_CFLAGS=$CFLAGS
+     CFLAGS="-I$IMAP_INC_DIR"
+     AC_CACHE_CHECK(for utf8_mime2text signature, ac_cv_utf8_mime2text,
+-      AC_TRY_COMPILE([
++      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <stdio.h>
+ #include <c-client.h>
+-      ],[
++      ]],[[
+         SIZEDTEXT *src, *dst;
+         utf8_mime2text(src, dst);
+-      ],[
++      ]])],[
+         ac_cv_utf8_mime2text=old
+       ],[
+         ac_cv_utf8_mime2text=new
+@@ -148,11 +148,11 @@ if test "$PHP_IMAP" != "no"; then
+     old_CFLAGS=$CFLAGS
+     CFLAGS="-I$IMAP_INC_DIR"
+     AC_CACHE_CHECK(for U8T_DECOMPOSE, ac_cv_u8t_canonical,
+-      AC_TRY_COMPILE([
++      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <c-client.h>
+-      ],[
++      ]],[[
+          int i = U8T_CANONICAL;
+-      ],[
++      ]])],[
+          ac_cv_u8t_decompose=yes
+       ],[
+          ac_cv_u8t_decompose=no
+diff --git a/ext/ldap/config.m4 b/ext/ldap/config.m4
+index 947cebca33a..a94b1fb732c 100644
+--- a/ext/ldap/config.m4
++++ b/ext/ldap/config.m4
+@@ -196,8 +196,8 @@ if test "$PHP_LDAP" != "no"; then
+ 
+   dnl Check for 3 arg ldap_set_rebind_proc
+   AC_CACHE_CHECK([for 3 arg ldap_set_rebind_proc], ac_cv_3arg_setrebindproc,
+-  [AC_TRY_COMPILE([#include <ldap.h>], [ldap_set_rebind_proc(0,0,0)],
+-  ac_cv_3arg_setrebindproc=yes, ac_cv_3arg_setrebindproc=no)])
++  [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ldap.h>]], [[ldap_set_rebind_proc(0,0,0)]])],
++  [ac_cv_3arg_setrebindproc=yes], [ac_cv_3arg_setrebindproc=no])])
+   if test "$ac_cv_3arg_setrebindproc" = yes; then
+     AC_DEFINE(HAVE_3ARG_SETREBINDPROC,1,[Whether 3 arg set_rebind_proc()])
+   fi
+diff --git a/ext/mbstring/config.m4 b/ext/mbstring/config.m4
+index 25bf2387613..6212880959e 100644
+--- a/ext/mbstring/config.m4
++++ b/ext/mbstring/config.m4
+@@ -75,7 +75,7 @@ AC_DEFUN([PHP_MBSTRING_SETUP_MBREGEX], [
+       fi
+ 
+       AC_CACHE_CHECK(for variable length prototypes and stdarg.h, php_cv_mbstring_stdarg, [
+-        AC_TRY_RUN([
++        AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <stdarg.h>
+ int foo(int x, ...) {
+ 	va_list va;
+@@ -86,7 +86,7 @@ int foo(int x, ...) {
+ 	return 0;
+ }
+ int main() { return foo(10, "", 3.14); }
+-        ], [php_cv_mbstring_stdarg=yes], [php_cv_mbstring_stdarg=no], [
++        ]])], [php_cv_mbstring_stdarg=yes], [php_cv_mbstring_stdarg=no], [
+           dnl cross-compile needs something here
+           case $host_alias in
+           *netware*)
+@@ -181,11 +181,11 @@ int main() { return foo(10, "", 3.14); }
+       save_old_LDFLAGS=$LDFLAGS
+       PHP_EVAL_LIBLINE([$MBSTRING_SHARED_LIBADD], LDFLAGS)
+       AC_MSG_CHECKING([if oniguruma has an invalid entry for KOI8 encoding])
+-      AC_TRY_LINK([
++      AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+ #include <oniguruma.h>
+-      ], [
++      ]], [[
+ return (int)(ONIG_ENCODING_KOI8 + 1);
+-      ], [
++      ]])], [
+         AC_MSG_RESULT([no])
+       ], [
+         AC_MSG_RESULT([yes])
+diff --git a/ext/opcache/config.m4 b/ext/opcache/config.m4
+index 5a8b86c1488..5f7b3db7543 100644
+--- a/ext/opcache/config.m4
++++ b/ext/opcache/config.m4
+@@ -12,7 +12,7 @@ if test "$PHP_OPCACHE" != "no"; then
+   ])
+ 
+   AC_MSG_CHECKING(for sysvipc shared memory support)
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/wait.h>
+ #include <sys/ipc.h>
+@@ -76,13 +76,13 @@ int main() {
+   }
+   return 0;
+ }
+-],dnl
++]])],[dnl
+     AC_DEFINE(HAVE_SHM_IPC, 1, [Define if you have SysV IPC SHM support])
+-    msg=yes,msg=no,msg=no)
++    msg=yes],[msg=no],[msg=no])
+   AC_MSG_RESULT([$msg])
+ 
+   AC_MSG_CHECKING(for mmap() using MAP_ANON shared memory support)
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/wait.h>
+ #include <sys/mman.h>
+@@ -128,13 +128,13 @@ int main() {
+   }
+   return 0;
+ }
+-],dnl
++]])],[dnl
+     AC_DEFINE(HAVE_SHM_MMAP_ANON, 1, [Define if you have mmap(MAP_ANON) SHM support])
+-    msg=yes,msg=no,msg=no)
++    msg=yes],[msg=no],[msg=no])
+   AC_MSG_RESULT([$msg])
+ 
+   AC_MSG_CHECKING(for mmap() using /dev/zero shared memory support)
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/wait.h>
+ #include <sys/mman.h>
+@@ -183,13 +183,13 @@ int main() {
+   }
+   return 0;
+ }
+-],dnl
++]])],[dnl
+     AC_DEFINE(HAVE_SHM_MMAP_ZERO, 1, [Define if you have mmap("/dev/zero") SHM support])
+-    msg=yes,msg=no,msg=no)
++    msg=yes],[msg=no],[msg=no])
+   AC_MSG_RESULT([$msg])
+ 
+   AC_MSG_CHECKING(for mmap() using shm_open() shared memory support)
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/wait.h>
+ #include <sys/mman.h>
+@@ -252,13 +252,13 @@ int main() {
+   }
+   return 0;
+ }
+-],dnl
++]])],[dnl
+     AC_DEFINE(HAVE_SHM_MMAP_POSIX, 1, [Define if you have POSIX mmap() SHM support])
+-    msg=yes,msg=no,msg=no)
++    msg=yes],[msg=no],[msg=no])
+   AC_MSG_RESULT([$msg])
+ 
+   AC_MSG_CHECKING(for mmap() using regular file shared memory support)
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <sys/types.h>
+ #include <sys/wait.h>
+ #include <sys/mman.h>
+@@ -321,9 +321,9 @@ int main() {
+   }
+   return 0;
+ }
+-],dnl
++]])],[dnl
+     AC_DEFINE(HAVE_SHM_MMAP_FILE, 1, [Define if you have mmap() SHM support])
+-    msg=yes,msg=no,msg=no)
++    msg=yes],[msg=no],[msg=no])
+   AC_MSG_RESULT([$msg])
+ 
+ flock_type=unknown
+diff --git a/ext/posix/config.m4 b/ext/posix/config.m4
+index 82b80ce972c..42835b287cb 100644
+--- a/ext/posix/config.m4
++++ b/ext/posix/config.m4
+@@ -14,7 +14,7 @@ if test "$PHP_POSIX" = "yes"; then
+   AC_CHECK_FUNCS(seteuid setegid setsid getsid setpgid getpgid ctermid mkfifo mknod getrlimit getlogin getgroups makedev initgroups getpwuid_r getgrgid_r)
+ 
+   AC_MSG_CHECKING([for working ttyname_r() implementation])
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <unistd.h>
+ 
+ int main(int argc, char *argv[])
+@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
+ 
+ 	return ttyname_r(0, buf, 64) ? 1 : 0;
+ }
+-  ],[
++  ]])],[
+     AC_MSG_RESULT([yes])
+     AC_DEFINE(HAVE_TTYNAME_R, 1, [Whether you have a working ttyname_r])
+   ],[
+@@ -33,12 +33,12 @@ int main(int argc, char *argv[])
+   ])
+ 
+   AC_CACHE_CHECK([for utsname.domainname], ac_cv_have_utsname_domainname, [
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+       #define _GNU_SOURCE
+       #include <sys/utsname.h>
+-    ],[
++    ]],[[
+       return sizeof(((struct utsname *)0)->domainname);
+-    ],[
++    ]])],[
+       ac_cv_have_utsname_domainname=yes
+     ],[
+       ac_cv_have_utsname_domainname=no
+diff --git a/ext/recode/config.m4 b/ext/recode/config.m4
+index 7f394d0465d..6a506fdc63d 100644
+--- a/ext/recode/config.m4
++++ b/ext/recode/config.m4
+@@ -39,12 +39,11 @@ if test "$PHP_RECODE" != "no"; then
+     old_LIBS=$LIBS
+     LDFLAGS="$LDFLAGS -L$RECODE_DIR/$RECODE_LIB"
+     LIBS="$LIBS -lrecode"
+-    AC_TRY_LINK(
+-    [
++    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+ char *program_name;
+-    ],[
++    ]],[[
+ recode_format_table();
+-    ],[
++    ]])],[
+       PHP_ADD_LIBRARY_DEFER_WITH_PATH(recode, $RECODE_DIR/$RECODE_LIB, RECODE_SHARED_LIBADD)
+       AC_DEFINE(HAVE_BROKEN_RECODE, 1, [Whether we have librecode 3.5])
+     ],[
+diff --git a/ext/sockets/config.m4 b/ext/sockets/config.m4
+index a5a63dfb616..fe4afaad54a 100644
+--- a/ext/sockets/config.m4
++++ b/ext/sockets/config.m4
+@@ -9,9 +9,9 @@ if test "$PHP_SOCKETS" != "no"; then
+   dnl Check for struct cmsghdr
+   AC_CACHE_CHECK([for struct cmsghdr], ac_cv_cmsghdr,
+   [
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <sys/types.h>
+-#include <sys/socket.h>], [struct cmsghdr s; s], ac_cv_cmsghdr=yes, ac_cv_cmsghdr=no)
++#include <sys/socket.h>]], [[struct cmsghdr s; s]])], [ac_cv_cmsghdr=yes], [ac_cv_cmsghdr=no])
+   ])
+ 
+   if test "$ac_cv_cmsghdr" = yes; then
+@@ -20,10 +20,10 @@ if test "$PHP_SOCKETS" != "no"; then
+ 
+   AC_CHECK_FUNCS([hstrerror socketpair if_nametoindex if_indextoname])
+   AC_CHECK_HEADERS([netdb.h netinet/tcp.h sys/un.h sys/sockio.h errno.h])
+-  AC_TRY_COMPILE([
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <sys/types.h>
+ #include <sys/socket.h>
+-  ], [static struct msghdr tp; int n = (int) tp.msg_flags; return n],[],
++  ]], [[static struct msghdr tp; int n = (int) tp.msg_flags; return n]])],[],
+     [AC_DEFINE(MISSING_MSGHDR_MSGFLAGS, 1, [ ])]
+   )
+   AC_DEFINE([HAVE_SOCKETS], 1, [ ])
+@@ -31,12 +31,12 @@ if test "$PHP_SOCKETS" != "no"; then
+   dnl Check for fied ss_family in sockaddr_storage (missing in AIX until 5.3)
+   AC_CACHE_CHECK([for field ss_family in struct sockaddr_storage], ac_cv_ss_family,
+   [
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <sys/socket.h>
+ #include <sys/types.h>
+ #include <netdb.h>
+-  ], [struct sockaddr_storage sa_store; sa_store.ss_family = AF_INET6;],
+-     ac_cv_ss_family=yes, ac_cv_ss_family=no)
++  ]], [[struct sockaddr_storage sa_store; sa_store.ss_family = AF_INET6;]])],
++    [ac_cv_ss_family=yes], [ac_cv_ss_family=no])
+   ])
+ 
+   if test "$ac_cv_ss_family" = yes; then
+@@ -46,10 +46,10 @@ if test "$PHP_SOCKETS" != "no"; then
+   dnl Check for AI_V4MAPPED flag
+   AC_CACHE_CHECK([if getaddrinfo supports AI_V4MAPPED],[ac_cv_gai_ai_v4mapped],
+   [
+-    AC_TRY_COMPILE([
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <netdb.h>
+-  ], [int flag = AI_V4MAPPED;],
+-     ac_cv_gai_ai_v4mapped=yes, ac_cv_gai_ai_v4mapped=no)
++  ]], [[int flag = AI_V4MAPPED;]])],
++    [ac_cv_gai_ai_v4mapped=yes], [ac_cv_gai_ai_v4mapped=no])
+   ])
+ 
+   if test "$ac_cv_gai_ai_v4mapped" = yes; then
+diff --git a/ext/standard/config.m4 b/ext/standard/config.m4
+index 6e0c92197fb..5b330f823d4 100644
+--- a/ext/standard/config.m4
++++ b/ext/standard/config.m4
+@@ -4,7 +4,7 @@ dnl
+ dnl Check if flush should be called explicitly after buffered io
+ dnl
+ AC_CACHE_CHECK([whether flush should be called explicitly after a buffered io], ac_cv_flush_io,[
+-AC_TRY_RUN( [
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
+@@ -38,7 +38,7 @@ int main(int argc, char **argv)
+ 
+ 	exit(result);
+ }
+-],[
++]])],[
+   ac_cv_flush_io=no
+ ],[
+   ac_cv_flush_io=yes
+@@ -60,7 +60,7 @@ if test "$ac_cv_func_crypt" = "no"; then
+ fi
+   
+ AC_CACHE_CHECK(for standard DES crypt, ac_cv_crypt_des,[
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -76,7 +76,7 @@ int main() {
+ #else
+ 	exit(1);
+ #endif
+-}],[
++}]])],[
+   ac_cv_crypt_des=yes
+ ],[
+   ac_cv_crypt_des=no
+@@ -85,7 +85,7 @@ int main() {
+ ])])
+ 
+ AC_CACHE_CHECK(for extended DES crypt, ac_cv_crypt_ext_des,[
+-  AC_TRY_RUN([
++  AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -101,7 +101,7 @@ int main() {
+ #else
+ 	exit(1);
+ #endif
+-}],[
++}]])],[
+   ac_cv_crypt_ext_des=yes
+ ],[
+   ac_cv_crypt_ext_des=no
+@@ -110,7 +110,7 @@ int main() {
+ ])])
+ 
+ AC_CACHE_CHECK(for MD5 crypt, ac_cv_crypt_md5,[
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -136,7 +136,7 @@ int main() {
+ #else
+ 	exit(1);
+ #endif
+-}],[
++}]])],[
+   ac_cv_crypt_md5=yes
+ ],[
+   ac_cv_crypt_md5=no
+@@ -145,7 +145,7 @@ int main() {
+ ])])
+ 
+ AC_CACHE_CHECK(for Blowfish crypt, ac_cv_crypt_blowfish,[
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -168,7 +168,7 @@ int main() {
+ #else
+ 	exit(1);
+ #endif
+-}],[
++}]])],[
+   ac_cv_crypt_blowfish=yes
+ ],[
+   ac_cv_crypt_blowfish=no
+@@ -177,7 +177,7 @@ int main() {
+ ])])
+ 
+ AC_CACHE_CHECK(for SHA512 crypt, ac_cv_crypt_sha512,[
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -199,7 +199,7 @@ int main() {
+ #else
+ 	exit(1);
+ #endif
+-}],[
++}]])],[
+   ac_cv_crypt_sha512=yes
+ ],[
+   ac_cv_crypt_sha512=no
+@@ -208,7 +208,7 @@ int main() {
+ ])])
+ 
+ AC_CACHE_CHECK(for SHA256 crypt, ac_cv_crypt_sha256,[
+-AC_TRY_RUN([
++AC_RUN_IFELSE([AC_LANG_SOURCE([[
+ #if HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
+@@ -230,7 +230,7 @@ int main() {
+ #else
+ 	exit(1);
+ #endif
+-}],[
++}]])],[
+   ac_cv_crypt_sha256=yes
+ ],[
+   ac_cv_crypt_sha256=no
+@@ -248,10 +248,10 @@ if test "$ac_cv_crypt_blowfish" = "no" || test "$ac_cv_crypt_des" = "no" || test
+   dnl Check for __alignof__ support in the compiler
+   dnl
+   AC_CACHE_CHECK(whether the compiler supports __alignof__, ac_cv_alignof_exists,[
+-  AC_TRY_COMPILE([
+-  ],[
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
++  ]],[[
+     int align = __alignof__(int);
+-  ],[
++  ]])],[
+     ac_cv_alignof_exists=yes
+   ],[
+     ac_cv_alignof_exists=no
+@@ -550,16 +550,16 @@ dnl
+ dnl Check for strptime()
+ dnl
+ AC_CACHE_CHECK(whether strptime() declaration fails, ac_cv_strptime_decl_fails,[
+-AC_TRY_COMPILE([
++AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <time.h>
+-],[
++]],[[
+ #ifndef HAVE_STRPTIME
+ #error no strptime() on this platform
+ #else
+ /* use invalid strptime() declaration to see if it fails to compile */
+ int strptime(const char *s, const char *format, struct tm *tm);
+ #endif
+-],[
++]])],[
+   ac_cv_strptime_decl_fails=no
+ ],[
+   ac_cv_strptime_decl_fails=yes
+@@ -579,13 +579,13 @@ AC_CHECK_FUNCS([mbrlen mbsinit],,,[
+ #endif
+ ])
+ AC_CACHE_CHECK([for mbstate_t], [ac_cv_type_mbstate_t],[
+-AC_TRY_COMPILE([
++AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #ifdef HAVE_WCHAR_H
+ # include <wchar.h>
+ #endif
+-],[
++]],[[
+ mbstate_t a;
+-],[
++]])],[
+   ac_cv_type_mbstate_t=yes
+ ],[
+   ac_cv_type_mbstate_t=no
+diff --git a/ext/sysvsem/config.m4 b/ext/sysvsem/config.m4
+index bfb5d92f4ea..208ff34951f 100644
+--- a/ext/sysvsem/config.m4
++++ b/ext/sysvsem/config.m4
+@@ -9,13 +9,11 @@ if test "$PHP_SYSVSEM" != "no"; then
+  PHP_NEW_EXTENSION(sysvsem, sysvsem.c, $ext_shared)
+  AC_DEFINE(HAVE_SYSVSEM, 1, [ ])
+  AC_CACHE_CHECK(for union semun,php_cv_semun,
+-   AC_TRY_COMPILE([
++   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ #include <sys/types.h>
+ #include <sys/ipc.h>
+ #include <sys/sem.h>
+-   ],
+-   [union semun x;],
+-   [
++   ]], [[union semun x;]])],[
+      php_cv_semun=yes
+    ],[
+      php_cv_semun=no
+diff --git a/sapi/cli/config.m4 b/sapi/cli/config.m4
+index 1a585c327aa..e873523fbd2 100644
+--- a/sapi/cli/config.m4
++++ b/sapi/cli/config.m4
+@@ -11,12 +11,11 @@ AC_CHECK_FUNCS(setproctitle)
+ AC_CHECK_HEADERS([sys/pstat.h])
+ 
+ AC_CACHE_CHECK([for PS_STRINGS], [cli_cv_var_PS_STRINGS],
+-[AC_TRY_LINK(
+-[#include <machine/vmparam.h>
++[AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <machine/vmparam.h>
+ #include <sys/exec.h>
+-],
+-[PS_STRINGS->ps_nargvstr = 1;
+-PS_STRINGS->ps_argvstr = "foo";],
++]],
++[[PS_STRINGS->ps_nargvstr = 1;
++PS_STRINGS->ps_argvstr = "foo";]])],
+ [cli_cv_var_PS_STRINGS=yes],
+ [cli_cv_var_PS_STRINGS=no])])
+ if test "$cli_cv_var_PS_STRINGS" = yes ; then
+diff --git a/sapi/fpm/config.m4 b/sapi/fpm/config.m4
+index 7bfa50bd3df..6d27f463cb5 100644
+--- a/sapi/fpm/config.m4
++++ b/sapi/fpm/config.m4
+@@ -23,7 +23,7 @@ AC_DEFUN([AC_FPM_PRCTL],
+ [
+   AC_MSG_CHECKING([for prctl])
+ 
+-  AC_TRY_COMPILE([ #include <sys/prctl.h> ], [prctl(0, 0, 0, 0, 0);], [
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/prctl.h>]], [[prctl(0, 0, 0, 0, 0);]])], [
+     AC_DEFINE([HAVE_PRCTL], 1, [do we have prctl?])
+     AC_MSG_RESULT([yes])
+   ], [
+@@ -37,7 +37,7 @@ AC_DEFUN([AC_FPM_CLOCK],
+ 
+   AC_MSG_CHECKING([for clock_gettime])
+ 
+-  AC_TRY_LINK([ #include <time.h> ], [struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);], [
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);]])], [
+     have_clock_gettime=yes
+     AC_MSG_RESULT([yes])
+   ], [
+@@ -50,7 +50,7 @@ AC_DEFUN([AC_FPM_CLOCK],
+     SAVED_LIBS="$LIBS"
+     LIBS="$LIBS -lrt"
+ 
+-    AC_TRY_LINK([ #include <time.h> ], [struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);], [
++    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);]])], [
+       have_clock_gettime=yes
+       AC_MSG_RESULT([yes])
+     ], [
+@@ -68,7 +68,7 @@ AC_DEFUN([AC_FPM_CLOCK],
+   if test "$have_clock_gettime" = "no"; then
+     AC_MSG_CHECKING([for clock_get_time])
+ 
+-    AC_TRY_RUN([ #include <mach/mach.h>
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[#include <mach/mach.h>
+       #include <mach/clock.h>
+       #include <mach/mach_error.h>
+ 
+@@ -88,12 +88,12 @@ AC_DEFUN([AC_FPM_CLOCK],
+ 
+         return 0;
+       }
+-    ], [
++    ]])], [
+       have_clock_get_time=yes
+       AC_MSG_RESULT([yes])
+     ], [
+       AC_MSG_RESULT([no])
+-    ])
++    ], [])
+   fi
+ 
+   if test "$have_clock_get_time" = "yes"; then
+@@ -108,9 +108,9 @@ AC_DEFUN([AC_FPM_TRACE],
+ 
+   AC_MSG_CHECKING([for ptrace])
+ 
+-  AC_TRY_COMPILE([
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+     #include <sys/types.h>
+-    #include <sys/ptrace.h> ], [ptrace(0, 0, (void *) 0, 0);], [
++    #include <sys/ptrace.h> ]], [[ptrace(0, 0, (void *) 0, 0);]])], [
+     have_ptrace=yes
+     AC_MSG_RESULT([yes])
+   ], [
+@@ -120,7 +120,7 @@ AC_DEFUN([AC_FPM_TRACE],
+   if test "$have_ptrace" = "yes"; then
+     AC_MSG_CHECKING([whether ptrace works])
+ 
+-    AC_TRY_RUN([
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+       #include <unistd.h>
+       #include <signal.h>
+       #include <sys/wait.h>
+@@ -187,7 +187,7 @@ AC_DEFUN([AC_FPM_TRACE],
+           return 0;
+         }
+       }
+-    ], [
++    ]])], [
+       AC_MSG_RESULT([yes])
+     ], [
+       have_ptrace=no
+@@ -207,11 +207,11 @@ AC_DEFUN([AC_FPM_TRACE],
+   if test "$have_broken_ptrace" = "yes"; then
+     AC_MSG_CHECKING([for mach_vm_read])
+ 
+-    AC_TRY_COMPILE([ #include <mach/mach.h>
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <mach/mach.h>
+       #include <mach/mach_vm.h>
+-    ], [
++    ]], [[
+       mach_vm_read((vm_map_t)0, (mach_vm_address_t)0, (mach_vm_size_t)0, (vm_offset_t *)0, (mach_msg_type_number_t*)0);
+-    ], [
++    ]])], [
+       have_mach_vm_read=yes
+       AC_MSG_RESULT([yes])
+     ], [
+@@ -235,8 +235,8 @@ AC_DEFUN([AC_FPM_TRACE],
+ 
+   if test -n "$proc_mem_file" ; then
+     AC_MSG_CHECKING([for proc mem file])
+-  
+-    AC_TRY_RUN([
++
++    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+       #define _GNU_SOURCE
+       #define _FILE_OFFSET_BITS 64
+       #include <stdint.h>
+@@ -262,7 +262,7 @@ AC_DEFUN([AC_FPM_TRACE],
+         close(fd);
+         return v1 != v2;
+       }
+-    ], [
++    ]])], [
+       AC_MSG_RESULT([$proc_mem_file])
+     ], [
+       proc_mem_file=""
+@@ -296,17 +296,14 @@ AC_DEFUN([AC_FPM_TRACE],
+ AC_DEFUN([AC_FPM_BUILTIN_ATOMIC],
+ [
+   AC_MSG_CHECKING([if gcc supports __sync_bool_compare_and_swap])
+-  AC_TRY_LINK(,
+-  [
++  AC_LINK_IFELSE([AC_LANG_PROGRAM([], [[
+     int variable = 1;
+     return (__sync_bool_compare_and_swap(&variable, 1, 2)
+            && __sync_add_and_fetch(&variable, 1)) ? 1 : 0;
+-  ],
+-  [
++  ]])], [
+     AC_MSG_RESULT([yes])
+     AC_DEFINE(HAVE_BUILTIN_ATOMIC, 1, [Define to 1 if gcc supports __sync_bool_compare_and_swap() a.o.])
+-  ],
+-  [
++  ], [
+     AC_MSG_RESULT([no])
+   ])
+ ])
+@@ -317,7 +314,7 @@ AC_DEFUN([AC_FPM_LQ],
+ 
+   AC_MSG_CHECKING([for TCP_INFO])
+ 
+-  AC_TRY_COMPILE([ #include <netinet/tcp.h> ], [struct tcp_info ti; int x = TCP_INFO;], [
++  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <netinet/tcp.h>]], [[struct tcp_info ti; int x = TCP_INFO;]])], [
+     have_lq=tcp_info
+     AC_MSG_RESULT([yes])
+   ], [
+@@ -331,7 +328,7 @@ AC_DEFUN([AC_FPM_LQ],
+   if test "$have_lq" = "no" ; then
+     AC_MSG_CHECKING([for SO_LISTENQLEN])
+ 
+-    AC_TRY_COMPILE([ #include <sys/socket.h> ], [int x = SO_LISTENQLIMIT; int y = SO_LISTENQLEN;], [
++    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]], [[int x = SO_LISTENQLIMIT; int y = SO_LISTENQLEN;]])], [
+       have_lq=so_listenq
+       AC_MSG_RESULT([yes])
+     ], [
+@@ -349,7 +346,7 @@ AC_DEFUN([AC_FPM_SYSCONF],
+ [
+ 	AC_MSG_CHECKING([for sysconf])
+ 
+-	AC_TRY_COMPILE([ #include <unistd.h> ], [sysconf(_SC_CLK_TCK);], [
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <unistd.h>]], [[sysconf(_SC_CLK_TCK);]])],[
+ 		AC_DEFINE([HAVE_SYSCONF], 1, [do we have sysconf?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -362,7 +359,7 @@ AC_DEFUN([AC_FPM_TIMES],
+ [
+ 	AC_MSG_CHECKING([for times])
+ 
+-	AC_TRY_COMPILE([ #include <sys/times.h> ], [struct tms t; times(&t);], [
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/times.h>]], [[struct tms t; times(&t);]])],[
+ 		AC_DEFINE([HAVE_TIMES], 1, [do we have times?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -375,18 +372,17 @@ AC_DEFUN([AC_FPM_KQUEUE],
+ [
+ 	AC_MSG_CHECKING([for kqueue])
+ 
+-	AC_TRY_COMPILE(
+-	[ 
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ 		#include <sys/types.h>
+ 		#include <sys/event.h>
+ 		#include <sys/time.h>
+-	], [
++	]], [[
+ 		int kfd;
+ 		struct kevent k;
+ 		kfd = kqueue();
+ 		/* 0 -> STDIN_FILENO */
+ 		EV_SET(&k, 0, EVFILT_READ , EV_ADD | EV_CLEAR, 0, 0, NULL);
+-	], [
++	]])], [
+ 		AC_DEFINE([HAVE_KQUEUE], 1, [do we have kqueue?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -399,17 +395,16 @@ AC_DEFUN([AC_FPM_PORT],
+ [
+ 	AC_MSG_CHECKING([for port framework])
+ 
+-	AC_TRY_COMPILE(
+-	[ 
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ 		#include <port.h>
+-	], [
++	]], [[
+ 		int port;
+ 
+ 		port = port_create();
+ 		if (port < 0) {
+ 			return 1;
+ 		}
+-	], [
++	]])], [
+ 		AC_DEFINE([HAVE_PORT], 1, [do we have port framework?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -422,11 +417,10 @@ AC_DEFUN([AC_FPM_DEVPOLL],
+ [
+ 	AC_MSG_CHECKING([for /dev/poll])
+ 
+-	AC_TRY_COMPILE(
+-	[ 
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ 		#include <stdio.h>
+ 		#include <sys/devpoll.h>
+-	], [
++	]], [[
+ 		int n, dp;
+ 		struct dvpoll dvp;
+ 		dp = 0;
+@@ -434,7 +428,7 @@ AC_DEFUN([AC_FPM_DEVPOLL],
+ 		dvp.dp_nfds = 0;
+ 		dvp.dp_timeout = 0;
+ 		n = ioctl(dp, DP_POLL, &dvp)
+-	], [
++	]])], [
+ 		AC_DEFINE([HAVE_DEVPOLL], 1, [do we have /dev/poll?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -447,10 +441,9 @@ AC_DEFUN([AC_FPM_EPOLL],
+ [
+ 	AC_MSG_CHECKING([for epoll])
+ 
+-	AC_TRY_COMPILE(
+-	[ 
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ 		#include <sys/epoll.h>
+-	], [
++	]], [[
+ 		int epollfd;
+ 		struct epoll_event e;
+ 
+@@ -470,7 +463,7 @@ AC_DEFUN([AC_FPM_EPOLL],
+ 		if (epoll_wait(epollfd, &e, 1, 1) < 0) {
+ 			return 1;
+ 		}
+-	], [
++	]])], [
+ 		AC_DEFINE([HAVE_EPOLL], 1, [do we have epoll?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -483,10 +476,9 @@ AC_DEFUN([AC_FPM_POLL],
+ [
+ 	AC_MSG_CHECKING([for poll])
+ 
+-	AC_TRY_COMPILE(
+-	[ 
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ 		#include <poll.h>
+-	], [
++	]], [[
+ 		struct pollfd fds[2];
+ 
+ 		fds[0].fd = 0;
+@@ -496,7 +488,7 @@ AC_DEFUN([AC_FPM_POLL],
+ 		fds[1].events = POLLIN;
+ 
+ 		 poll(fds, 2, 1);
+-	], [
++	]])], [
+ 		AC_DEFINE([HAVE_POLL], 1, [do we have poll?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -509,8 +501,7 @@ AC_DEFUN([AC_FPM_SELECT],
+ [
+ 	AC_MSG_CHECKING([for select])
+ 
+-	AC_TRY_COMPILE(
+-	[ 
++	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+ 		/* According to POSIX.1-2001 */
+ 		#include <sys/select.h>
+ 
+@@ -518,7 +509,7 @@ AC_DEFUN([AC_FPM_SELECT],
+ 		#include <sys/time.h>
+ 		#include <sys/types.h>
+ 		#include <unistd.h>
+-	], [
++	]], [[
+ 		fd_set fds;
+ 		struct timeval t;
+ 		t.tv_sec = 0;
+@@ -527,7 +518,7 @@ AC_DEFUN([AC_FPM_SELECT],
+ 		/* 0 -> STDIN_FILENO */
+ 		FD_SET(0, &fds);
+ 		select(FD_SETSIZE, &fds, NULL, NULL, &t);
+-	], [
++	]])], [
+ 		AC_DEFINE([HAVE_SELECT], 1, [do we have select?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+@@ -543,7 +534,7 @@ AC_DEFUN([AC_FPM_APPARMOR],
+ 	SAVED_LIBS="$LIBS"
+ 	LIBS="$LIBS -lapparmor"
+ 
+-	AC_TRY_LINK([ #include <sys/apparmor.h> ], [change_hat("test", 0);], [
++	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/apparmor.h>]], [[change_hat("test", 0);]])], [
+ 		AC_DEFINE([HAVE_APPARMOR], 1, [do we have apparmor support?])
+ 		AC_MSG_RESULT([yes])
+ 	], [
+-- 
+2.53.0
+
