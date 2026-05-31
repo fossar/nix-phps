@@ -934,13 +934,6 @@ in
               ];
             in
             attrs.preConfigure or "" + linkInternalDeps deps;
-
-          env = mergeEnv attrs {
-            NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.2") [
-              "-Wno-implicit-function-declaration"
-              "-Wno-int-conversion"
-            ];
-          };
         })
       else
         prev.extensions.redis;
