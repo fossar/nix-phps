@@ -929,7 +929,7 @@ in
         prev.extensions.redis.overrideAttrs (attrs: {
           preConfigure =
             let
-              deps = lib.optionals (lib.versionOlder prev.php.version "8.0") [
+              deps = [
                 final.extensions.json
               ];
             in
