@@ -768,30 +768,26 @@ in
         let
           upstreamPatches = attrs.patches or [ ];
 
-          ourPatches = lib.optionals (lib.versionOlder prev.php.version "7.0") [
-            # PHP ≤ 5.6 requires openssl 1.0.
-            # https://github.com/php-build/php-build/pull/609
-            # https://github.com/oerdnj/deb.sury.org/issues/566
-            (pkgs.fetchurl {
-              url = "https://github.com/php-build/php-build/raw/43c8e02689bc29d48daa338b73bcd4f2bbd8def1/share/php-build/patches/php-5.6-support-openssl-1.1.0.patch";
-              sha256 = "UHu3SyYSMozfXlm5ZGRaSdD5NnrdAB7NaY4P0NREVCE=";
-            })
-          ];
+          ourPatches =
+            lib.optionals (lib.versionOlder prev.php.version "7.0") [
+              # PHP ≤ 5.6 requires openssl 1.0.
+              # https://github.com/php-build/php-build/pull/609
+              # https://github.com/oerdnj/deb.sury.org/issues/566
+              (pkgs.fetchurl {
+                url = "https://github.com/php-build/php-build/raw/43c8e02689bc29d48daa338b73bcd4f2bbd8def1/share/php-build/patches/php-5.6-support-openssl-1.1.0.patch";
+                sha256 = "UHu3SyYSMozfXlm5ZGRaSdD5NnrdAB7NaY4P0NREVCE=";
+              })
+            ]
+            ++ lib.optionals (lib.versionOlder prev.php.version "8.1") [
+              # Support OpenSSL 3 on PHP ≤ 8.1
+              # https://github.com/php-build/php-build/pull/758
+              (pkgs.fetchurl {
+                url = "https://github.com/php-build/php-build/raw/4dcf8a0b94f13dd6eff3da985dab2cffa45331f7/share/php-build/patches/php-8.0-support-openssl-3.patch";
+                hash = "sha256-NL5CZfx1FESsTVCZzK2V1XEgmH0NNM35hyCC/rsQVIM=";
+              })
+            ];
         in
         ourPatches ++ upstreamPatches;
-
-      buildInputs =
-        let
-          replaceOpenssl =
-            pkg:
-            if pkg.pname == "openssl" && lib.versionOlder prev.php.version "8.1" then
-              pkgs.openssl_1_1.overrideAttrs (old: {
-                meta = builtins.removeAttrs old.meta [ "knownVulnerabilities" ];
-              })
-            else
-              pkg;
-        in
-        builtins.map replaceOpenssl attrs.buildInputs;
     });
 
     openswoole =
