@@ -8,7 +8,7 @@ let
     version = "7.3.33";
     hash = "sha256-9BJIfX2VNDfnl4oNe27Jm/SoXPM3gBRDioV3uJU1RRo=";
 
-    extraPatches = prev.lib.optionals prev.stdenv.isDarwin [
+    extraPatches = prev.lib.optionals prev.stdenv.hostPlatform.isDarwin [
       # Fix build on Darwin
       # https://bugs.php.net/bug.php?id=76826
       (prev.fetchurl {
@@ -70,7 +70,7 @@ base.withExtensions (
       zip
       zlib
     ]
-    ++ prev.lib.optionals (!prev.stdenv.isDarwin) [
+    ++ prev.lib.optionals (!prev.stdenv.hostPlatform.isDarwin) [
       imap
     ]
   )
