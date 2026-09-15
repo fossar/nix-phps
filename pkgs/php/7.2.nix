@@ -61,7 +61,7 @@ base.withExtensions (
       zip
       zlib
     ]
-    ++ prev.lib.optionals (!prev.stdenv.isDarwin) [
+    ++ prev.lib.optionals (!prev.stdenv.hostPlatform.isDarwin) [
       imap
     ]
   )

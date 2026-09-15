@@ -36,7 +36,7 @@ stdenv.mkDerivation (finalAttrs: {
   propagatedBuildInputs = [
     findXMLCatalogs
   ]
-  ++ lib.optionals stdenv.isDarwin [ libiconv ]
+  ++ lib.optionals stdenv.hostPlatform.isDarwin [ libiconv ]
   ++ lib.optionals icuSupport [ icu ];
 
   configureFlags = [
@@ -48,7 +48,7 @@ stdenv.mkDerivation (finalAttrs: {
   enableParallelBuilding = true;
 
   doCheck = (stdenv.hostPlatform == stdenv.buildPlatform) && stdenv.hostPlatform.libc != "musl";
-  preCheck = lib.optional stdenv.isDarwin ''
+  preCheck = lib.optional stdenv.hostPlatform.isDarwin ''
     export DYLD_LIBRARY_PATH="$PWD/.libs:$DYLD_LIBRARY_PATH"
   '';
 
