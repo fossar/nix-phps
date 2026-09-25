@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         php:
+          - branch: "8.6"
           - branch: "8.5"
           - branch: "8.4"
           - branch: "8.3"
@@ -79,6 +80,7 @@ jobs:
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-imagick
 
       - name: Build Redis extension
+        if: ${{ !(steps.params.outputs.major == 8 && steps.params.outputs.minor == 6) }}
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-redis
 
       - name: Build Redis 3 extension
@@ -94,14 +96,14 @@ jobs:
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-mysql
 
       - name: Build Xdebug extension
-        if: ${{ !(steps.params.outputs.major == 8 && steps.params.outputs.minor == 3) }}
+        if: ${{ !(steps.params.outputs.major == 8 && steps.params.outputs.minor == 3) && !(steps.params.outputs.major == 8 && steps.params.outputs.minor == 6) }}
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-xdebug
 
       - name: Build Tidy extension
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-tidy
 
       - name: Build Decimal extension
-        if: ${{ steps.params.outputs.major >= 7 }}
+        if: ${{ steps.params.outputs.major >= 7 && !(steps.params.outputs.major == 8 && steps.params.outputs.minor == 6) }}
         run: nix-build -A outputs.checks.${{ matrix.archs.arch }}.${{ steps.params.outputs.attr }}-decimal
 
       - name: Check that composer PHAR works

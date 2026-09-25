@@ -358,4 +358,8 @@ in
   php85 = prev.php85.override {
     inherit packageOverrides;
   };
+
+  php86 = prev.php86.override {
+    inherit packageOverrides;
+  };
 }

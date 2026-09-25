@@ -28,6 +28,7 @@ let
 
     redis = {
       description = "Build Redis extension";
+      enabled = { php, lib, ... }: lib.versionOlder php.version "8.6";
       drv = { php, ... }: php.extensions.redis;
     };
 
@@ -45,6 +46,7 @@ let
 
     xdebug = {
       description = "Build Xdebug extension";
+      enabled = { php, lib, ... }: lib.versionOlder php.version "8.6";
       drv = { php, ... }: php.extensions.xdebug;
     };
 
@@ -55,7 +57,8 @@ let
 
     decimal = {
       description = "Build Decimal extension";
-      enabled = { php, lib, ... }: lib.versionAtLeast php.version "7";
+      enabled =
+        { php, lib, ... }: lib.versionAtLeast php.version "7" && lib.versionOlder php.version "8.6";
       drv = { php, ... }: php.extensions.decimal;
     };
 
