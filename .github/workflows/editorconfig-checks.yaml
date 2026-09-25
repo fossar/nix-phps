@@ -13,4 +13,4 @@ jobs:
       - name: Check files for EditorConfig compliance
         uses: editorconfig-checker/action-editorconfig-checker@v3.0.0
         with:
-          version: v3.7.0
+          version: v4.0.2
