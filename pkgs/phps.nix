@@ -38,6 +38,27 @@ let
         {
           patches =
             attrs.patches or [ ]
+
+            # Avoid state corruption via bailout (CVE-2026-109618, CVE-2026-109619)
+            ++ lib.optionals (lib.versions.majorMinor args.version == "7.4") [
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/712e60f9edfd03f0960fc4fc3c2c375f42b90aa2.patch";
+                hash = "sha256-hBrt0QH0j6iDQmylpt3Rj//F8266gUeRyHDwxE3DR2A=";
+              })
+            ]
+            ++ lib.optionals (lib.versions.majorMinor args.version == "8.0") [
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/82f8f31b16a035c1b67cc253e79f7cc288f4cc20.patch";
+                hash = "sha256-AcxKFJ1pGrTgxvsBu2kXTDAIBMXdRbnQpiG2O8xmxxk=";
+              })
+            ]
+            ++ lib.optionals (lib.versions.majorMinor args.version == "8.1") [
+              (prev.pkgs.fetchpatch {
+                url = "https://github.com/php/php-src/commit/1d7dec178a094e6e75b229ce22754045f8c6070a.patch";
+                hash = "sha256-qiqMcXTW8jhgPkZCs90m1+BG/4zi0Gxvw8XBLJjZg2I=";
+              })
+            ]
+
             ++ lib.optionals (lib.versions.majorMinor args.version == "5.6") [
               # Patch to make it build with autoconf >= 2.72
               # Source: https://aur.archlinux.org/packages/php56-ldap?all_deps=1#comment-954506
