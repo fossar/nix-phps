@@ -21,6 +21,8 @@ let
   inherit (pkgs.stdenv.cc) isClang;
 
   inherit (import ./lib.nix { inherit lib; }) appendStrings mergeEnv removeLines;
+
+  pcre2 = if lib.versionAtLeast prev.php.version "7.3" then pkgs.pcre2 else pkgs.pcre;
 in
 {
   buildPecl =
@@ -264,6 +266,17 @@ in
         ''
       );
     });
+
+    # The `postConfigure` in nixpkgs only applies to PHP >= 8.2
+    # https://github.com/NixOS/nixpkgs/commit/7bbcbc9d8cdf74d257354bc3e9511588f2178081
+    filter =
+      if lib.versionAtLeast prev.php.version "8.2" then
+        prev.extensions.filter
+      else
+        prev.mkExtension {
+          name = "filter";
+          buildInputs = [ pcre2 ];
+        };
 
     ffi =
       if lib.versionAtLeast prev.php.version "7.4" then
