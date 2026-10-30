@@ -364,9 +364,7 @@ in
 
   php81 = import ./php/8.1.nix { inherit prev mkPhp; };
 
-  php82 = prev.php82.override {
-    inherit packageOverrides;
-  };
+  php82 = import ./php/8.2.nix { inherit prev mkPhp; };
 
   php83 = prev.php83.override {
     inherit packageOverrides;
