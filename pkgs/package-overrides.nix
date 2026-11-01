@@ -7,6 +7,7 @@ final: prev:
 
 let
   libxml2_12 = pkgs.callPackage ./libxml2/2.12.nix { };
+  pcre1 = pkgs.callPackage ./pcre { };
 
   patchName = patch: patch.name or (builtins.baseNameOf patch);
 
@@ -21,8 +22,6 @@ let
   inherit (pkgs.stdenv.cc) isClang;
 
   inherit (import ./lib.nix { inherit lib; }) appendStrings mergeEnv removeLines;
-
-  pcre2 = if lib.versionAtLeast prev.php.version "7.3" then pkgs.pcre2 else pkgs.pcre;
 in
 {
   buildPecl =
@@ -272,10 +271,15 @@ in
     filter =
       if lib.versionAtLeast prev.php.version "8.2" then
         prev.extensions.filter
+      else if lib.versionOlder prev.php.version "7.3" then
+        prev.mkExtension {
+          name = "filter";
+          buildInputs = [ pcre1 ];
+        }
       else
         prev.mkExtension {
           name = "filter";
-          buildInputs = [ pcre2 ];
+          buildInputs = [ pkgs.pcre2 ];
         };
 
     ffi =

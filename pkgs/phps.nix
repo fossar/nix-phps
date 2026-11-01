@@ -8,6 +8,7 @@ let
   packageOverrides = import ./package-overrides.nix prev;
 
   libxml2_12 = prev.callPackage ./libxml2/2.12.nix { };
+  pcre1 = prev.callPackage ./pcre { };
 
   inherit (prev) lib;
 
@@ -27,7 +28,7 @@ let
       # Use a consistent libxml2 version.
       libxslt = prev.libxslt.override { inherit libxml2; };
 
-      pcre2 = if lib.versionAtLeast args.version "7.3" then prev.pcre2 else prev.pcre;
+      pcre2 = if lib.versionAtLeast args.version "7.3" then prev.pcre2 else pcre1;
     in
     {
       inherit packageOverrides libxml2 pcre2;
@@ -256,8 +257,8 @@ let
             ]
             ++ lib.optionals (lib.versionOlder args.version "7.3") [
               # Only PCRE 1 supported and no pkg-config.
-              "--with-pcre-regex=${prev.pcre.dev}"
-              "PCRE_LIBDIR=${prev.pcre}"
+              "--with-pcre-regex=${pcre1.dev}"
+              "PCRE_LIBDIR=${pcre1}"
             ];
 
           buildInputs =
@@ -364,9 +365,7 @@ in
 
   php81 = import ./php/8.1.nix { inherit prev mkPhp; };
 
-  php82 = prev.php82.override {
-    inherit packageOverrides;
-  };
+  php82 = import ./php/8.2.nix { inherit prev mkPhp; };
 
   php83 = prev.php83.override {
     inherit packageOverrides;
