@@ -32,7 +32,7 @@ The following versions are currently available:
 - `php83`
 - `php84`
 - `php85`
-- `php86` **PRE-RELEASE**
+- `php86`
 
 There is also a `php` package which is the alias of the default PHP version in Nixpkgs.
 
