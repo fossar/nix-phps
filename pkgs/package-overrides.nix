@@ -24,21 +24,6 @@ let
   inherit (import ./lib.nix { inherit lib; }) appendStrings mergeEnv removeLines;
 in
 {
-  buildPecl =
-    {
-      internalDeps ? [ ],
-      ...
-    }@args:
-
-    prev.buildPecl (
-      args
-      // {
-        # We started bundling hash so we need to remove
-        # references to the external extension which no longer exists.
-        internalDeps = builtins.filter (d: d != null) internalDeps;
-      }
-    );
-
   tools =
     prev.tools
     // {
