@@ -95,15 +95,7 @@ in
       if lib.versionOlder prev.php.version "7.0" then
         throw "php.extensions.decimal requires PHP version >= 7.0"
       else if lib.versionOlder prev.php.version "8.0" then
-        prev.extensions.decimal.overrideAttrs (attrs: {
-          preConfigure = attrs.preConfigure or "" + linkInternalDeps [ final.extensions.json ];
-
-          env = mergeEnv attrs {
-            NIX_CFLAGS_COMPILE = lib.optionals (lib.versionOlder prev.php.version "7.4") [
-              "-Wno-incompatible-${lib.optionalString isClang "function-"}pointer-types"
-            ];
-          };
-        })
+        final.callPackage ./extensions/decimal/1.5.nix { }
       else
         prev.extensions.decimal;
 
