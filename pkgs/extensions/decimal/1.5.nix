@@ -24,6 +24,15 @@ buildPecl (finalAttrs: {
     "--with-libmpdec-path=${mpdecimal}"
   ];
 
+  doCheck = true;
+
+  preCheck = ''
+    # HACK: The extension depends on json but the tests do not load it
+    substituteInPlace Makefile --replace-fail \
+      'TEST_PHP_EXECUTABLE=$(PHP_EXECUTABLE)' \
+      'echo "extension=${php.extensions.json}/lib/php/extensions/json.so" >> $(top_builddir)/tmp-php.ini; TEST_PHP_EXECUTABLE=$(PHP_EXECUTABLE)'
+  '';
+
   env = {
     NIX_CFLAGS_COMPILE = lib.optionalString (lib.versionOlder php.version "7.4") "-Wno-incompatible-${lib.optionalString stdenv.cc.isClang "function-"}pointer-types";
   };
